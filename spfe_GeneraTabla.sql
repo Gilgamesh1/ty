@@ -152,7 +152,7 @@ Declare @Id_Comprobante Int
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
           Case When left(Cte.CodUbigeo,3)='112' then '40' else 
           Case When C.m_Trans_Gratuita>0  Then case When C.m_Trans_Gratuita=0 Then '21' else '13' end  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
-          case When C.m_Trans_Gratuita=0 Then '20' else '13' end end end   -- Tipo de Afectacion
+          case When C.m_Trans_Gratuita=0 Then '10' else '13' end end end   -- Tipo de Afectacion
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
