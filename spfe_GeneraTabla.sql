@@ -7,7 +7,6 @@ GO
 
 
 
-
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
 ALTER      PROCEDURE [dbo].[spfe_GeneraTabla]
@@ -19,7 +18,9 @@ ALTER      PROCEDURE [dbo].[spfe_GeneraTabla]
 	
 AS
 
-Declare @Id_Comprobante Int
+Declare @Id_Comprobante Int, 
+        @ItemAnticipo   Int,
+        @Anticipo       Varchar(1)
 --BEGIN TRANSACTION
 
 
@@ -46,6 +47,17 @@ Declare @Id_Comprobante Int
       Delete from FE_Comprobantes...FE_Cabecera Where IdFE=@Id_Comprobante
       Delete from FE_Comprobantes...FE_Detalle  Where IdFacturacion=@Id_Comprobante
    End
+
+   Set @Anticipo='N' 
+   Select @Anticipo='S' 
+     From VNT_DOC_DETALLE 
+    Where CodEmp=@Empresa 
+      And TipDoc=@TipoDoc 
+      And SerDoc=@Serie 
+      And NumDoc=@Numero
+      And Isnull(Anulado,0)<>1
+      And Left(DesArt,10)='- ADELANTO'
+
    -- Cabecera
    Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
 	EmpresaTelefono,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
@@ -53,9 +65,12 @@ Declare @Id_Comprobante Int
 	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
         TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
         ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,
-        ComprobanteCheckGratuito,ComprobanteMontoGratuito,ComprobanteMontoLetrasGratuito,
+        ComprobanteMontoGratuito,
         ImpuestoTasaIgv,ImpuestoIgv,ComprobanteImporteTotal,ComprobanteDescuentoGlobal,
 	ComprobanteMontoEnLetras,
+        -- Linea adicionada para comprobantes gratuitos
+        ComprobanteCheckGratuito,ComprobanteMontoLetrasGratuito,
+        -- 
 	DetraccionPorcentaje,DetraccionMonto,NroCuenta,
 	ComprobanteRefTipo,ComprobanteRefSerie,ComprobanteRefNumero,ComprobanteRefCodigoMotivo,ComprobanteRefSustento,
 	ComprobanteFechaEmision,FormaPagoFechaVencimiento,FormaPagoNotaInstruccion,FormaPagoCodigo,
@@ -76,20 +91,21 @@ Declare @Id_Comprobante Int
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
---          Case When left(Cte.TipDoc,3)='104' then C.CodCP else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  'PEN','USD',C.TipoCambio,
           Case When C.ImporteIgv=0 Then 0 else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
---          Case When C.m_Trans_Gratuita>0 Then 1 else 0 end,C.m_Trans_Gratuita,Case When C.m_Trans_Gratuita>0 Then 'SON CERO CON 00/100 SOLES' else NULL end,
-          Case When C.m_Trans_Gratuita>0 Then 1 else 0 end,C.m_Trans_Gratuita+C.ImporteIgv as ComprobanteMontoGratuito,Case When C.m_Trans_Gratuita>0 Then 'SON CERO CON 00/100 SOLES' else NULL end,
+          C.m_Trans_Gratuita,
           PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
---          Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
-          Case When C.m_Trans_Gratuita>0 Then Round(C.m_Trans_Gratuita+C.ImporteIgv,2) else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
+          Case When C.m_Trans_Gratuita>0 Then Round(C.ImporteIgv+C.ImporteIgv,2) else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
           ImporteTotalDscto,
 	  Case When C.m_Trans_Gratuita>0 Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
           else dbo.numero_a_letras(Round(C.M_Base_Imponible+Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,2),Case When C.codmoneda='1' Then 'DOLARES AMERICANOS' else 'SOLES' End)  end,
+	  -- Linea adicionada en referencia para transferencia gratuita
+	  Case When C.m_Trans_Gratuita=0 then 0 else 1 end, -- ComprobanteCheckGratuito
+	  Case When C.m_Trans_Gratuita=0 then NULL else 'SON CERO CON 00/100 SOLES' end, -- ComprobanteMontoLetrasGratuito
+          --
           10.00,   -- tasa de detraccisn
           Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0),
           '00003108198',
@@ -100,7 +116,8 @@ Declare @Id_Comprobante Int
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
 	  C.FecDoc,C.FecVen,'' as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
-          Case When left(Cte.TipDoc,3)='104' then  Case When C.ImporteIgv>0 Then '03' else '02' end else '01' end As TipoOperacion,
+          Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else '01' end end As TipoOperacion,
+          --
 	  0,0,
 	  0,0,0,
 	  0,0,0,
@@ -126,6 +143,48 @@ Declare @Id_Comprobante Int
   --
    Update FE_Comprobantes...FE_Cabecera Set IdFacturacion=@id_Comprobante where idFE=@Id_Comprobante
 
+   -- Busqueda de Anticipos
+
+   Select @ItemAnticipo=COUNT(*) From VNT_DOC_DETALLE 
+    Where CodEmp=@Empresa 
+      And TipDoc=@TipoDoc 
+      And SerDoc=@Serie 
+      And NumDoc=@Numero
+      And Isnull(Anulado,0)<>1
+      And Left(DesArt,24)='000000-00     - ADELANTO'
+   -- 
+   If ISNULL(@ItemAnticipo,0)>0 
+   Begin
+
+    DECLARE @PrepagoMonto float,
+            @PrepagoValor Float,
+            @PrepagoSerieNumero Varchar(30),
+            @PrepagoFecha Datetime,
+            @PrepagoDescripcion Varchar(100)
+
+    Select Top 1 @PrepagoMonto=Round(Abs(Total*(1+c.Pigv/100)),2),@PrepagoValor=Round(Abs(Total),2),
+                 @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,1)+'-'+d.NumDocref, -- '000000-00     - ADELANTO  FAC-F01-00046436'
+                 @PrepagoFecha=d.Fecha,
+                 @PrepagoDescripcion=Left(DesArt,24)
+     From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
+    Where d.CodEmp=@Empresa 
+      And d.TipDoc=@TipoDoc 
+      And d.SerDoc=@Serie 
+      And d.NumDoc=@Numero
+      And Isnull(d.Anulado,0)<>1
+      And Left(d.DesArt,24)='000000-00     - ADELANTO'
+              
+    Update FE_Comprobantes...FE_Cabecera 
+       Set PrepagoCodigo=Case When ComprobanteTipo='01' Then '02' else '03' End,
+           ComprobanteTotalPrepago=@PrepagoValor,PrepagoMonto=@PrepagoMonto,PrepagoValor=@PrepagoValor,
+           PrepagoCodigoInstruccion=@PrepagoSerieNumero,
+           PrepagoRucEmisor=EmpresaRUC,PrepagoTipoDocumentoIdentidad=EmpresaTipoDocumento,
+           PrepagoFechaRecepcion=@PrepagoFecha,PrepagoDescripcion=@PrepagoDescripcion,
+           PrepagoEnvio=1
+     Where idFE=@Id_Comprobante
+   End
+   ---
+
    -- Detalle
 
    Insert into FE_Comprobantes...FE_Detalle(idFacturacion,DetalleItem,DetalleCodigo,DetalleDescripcion,
@@ -146,17 +205,16 @@ Declare @Id_Comprobante Int
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Round(d.Precio_Unit*(1+c.Pigv/100),2) as DetalleValorVUnitarioConIGV,
+          Round(d.Precio_Unit*(1+c.Pigv/100),2), --9
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
-          0,0,c.pigv as IGVPorcentaje,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end as IGVMonto,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end as DetalleTotal,
+          0,0,c.pigv,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end,
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
-          Case When left(Cte.TipDoc,3)='104' then  '40' else  
-          Case When C.m_Trans_Gratuita>0  Then  '13'  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
-           '10'  end end  -- Tipo de Afectacion
+          Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
+          Case When C.m_Trans_Gratuita>0  Then '13' else '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
@@ -165,9 +223,11 @@ Declare @Id_Comprobante Int
       And d.NumDoc=@Numero
       And Isnull(D.Anulado,0)<>1
       And Isnull(d.Total,0)>0
+      And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
     Order By d.Item
 
     END
+
 
 
 GO
