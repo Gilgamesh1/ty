@@ -98,7 +98,7 @@ Declare @Id_Comprobante Int,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
           C.m_Trans_Gratuita,
           PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
-          Case When C.m_Trans_Gratuita>0 Then Round(C.ImporteIgv+C.ImporteIgv,2) else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
           ImporteTotalDscto,
 	  Case When C.m_Trans_Gratuita>0 Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
           else dbo.numero_a_letras(Round(C.M_Base_Imponible+Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,2),Case When C.codmoneda='1' Then 'DOLARES AMERICANOS' else 'SOLES' End)  end,
@@ -205,7 +205,7 @@ Declare @Id_Comprobante Int,
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Round(d.Precio_Unit*(1+c.Pigv/100),2), --9
+          Case When C.m_Trans_Gratuita>0 then Round(d.Precio_Unit,2) else Round(d.Precio_Unit*(1+c.Pigv/100),2)end, --9
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
           0,0,c.pigv,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
@@ -235,4 +235,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
