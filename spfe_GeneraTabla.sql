@@ -23,7 +23,7 @@ Declare @Id_Comprobante Int
 
 
   /* *******************************************
-  -- Datos para la Facturación Electrónica 
+  -- Datos para la Facturacisn Electrsnica 
      *******************************************/
 
 --  Declare @Numero Varchar(8)
@@ -74,8 +74,8 @@ Declare @Id_Comprobante Int
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
-          Case When left(Cte.CodUbigeo,3)='112' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
-          Case When left(Cte.CodUbigeo,3)='112' then C.CodCP else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
+          Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
+          Case When left(Cte.TipDoc,3)='104' then C.CodCP else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  'PEN','USD',C.TipoCambio,
           Case When C.ImporteIgv=0 Then 0 else Round(C.M_Base_Imponible,2) end as ValorGravado,
@@ -86,7 +86,7 @@ Declare @Id_Comprobante Int
           ImporteTotalDscto,
 	  Case When C.m_Trans_Gratuita>0 Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
           else dbo.numero_a_letras(Round(C.M_Base_Imponible+Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,2),Case When C.codmoneda='1' Then 'DOLARES AMERICANOS' else 'SOLES' End)  end,
-          10.00,   -- tasa de detracción
+          10.00,   -- tasa de detraccisn
           Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0),
           '00003108198',
 	  case When @TipoDoc IN ('NCR','NDB') then Case When C.CodDocRef='FAC' Then '01' Else Case When C.CodDocRef='BOL' Then '03' Else '08' end end Else '' End,
@@ -96,7 +96,7 @@ Declare @Id_Comprobante Int
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
 	  C.FecDoc,C.FecVen,'' as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
-          Case When left(Cte.CodUbigeo,3)='112' then '02' else '01' end As TipoOperacion,
+          Case When left(Cte.TipDoc,3)='104' then '02' else '01' end As TipoOperacion,
 	  0,0,
 	  0,0,0,
 	  0,0,0,
@@ -150,7 +150,7 @@ Declare @Id_Comprobante Int
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
-          Case When left(Cte.CodUbigeo,3)='112' then '40' else 
+          Case When left(Cte.TipDoc,3)='104' then '40' else 
           Case When C.m_Trans_Gratuita>0  Then case When C.m_Trans_Gratuita=0 Then '21' else '13' end  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
           case When C.m_Trans_Gratuita=0 Then '10' else '13' end end end   -- Tipo de Afectacion
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
