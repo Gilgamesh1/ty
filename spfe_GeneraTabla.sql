@@ -7,9 +7,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER      PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER       PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -96,7 +97,7 @@ Declare @Id_Comprobante Int,
 	  'PEN','USD',C.TipoCambio,
           Case When C.ImporteIgv=0 Then 0 else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
-          C.m_Trans_Gratuita,
+          Case When C.m_Trans_Gratuita>0 then C.m_Trans_Gratuita+C.ImporteIgv else C.m_Trans_Gratuita end as ComprobanteMontoGratuito,
           PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
           ImporteTotalDscto,
@@ -205,7 +206,7 @@ Declare @Id_Comprobante Int,
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Case When C.m_Trans_Gratuita>0 then Round(d.Precio_Unit,2) else Round(d.Precio_Unit*(1+c.Pigv/100),2)end, --9
+          Case When C.m_Trans_Gratuita>0 then d.Precio_Unit*(1+c.Pigv/100) else Round(d.Precio_Unit*(1+c.Pigv/100),2)end, --9
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
           0,0,c.pigv,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
@@ -230,8 +231,10 @@ Declare @Id_Comprobante Int,
 
 
 
+
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
+
