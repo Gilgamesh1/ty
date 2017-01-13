@@ -7,9 +7,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER     PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER      PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -164,12 +165,6 @@ Declare @Id_Comprobante Int
     Order By d.Item
 
     END
-
-
-
-
-
-
 
 
 GO
