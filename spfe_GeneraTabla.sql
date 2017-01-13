@@ -100,7 +100,7 @@ Declare @Id_Comprobante Int
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
 	  C.FecDoc,C.FecVen,'' as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
-          Case When left(Cte.TipDoc,3)='104' then '02' else '01' end As TipoOperacion,
+          Case When left(Cte.TipDoc,3)='104' then  Case When C.ImporteIgv>0 Then '03' else '02' end else '01' end As TipoOperacion,
 	  0,0,
 	  0,0,0,
 	  0,0,0,
@@ -146,18 +146,17 @@ Declare @Id_Comprobante Int
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Round(d.Precio_Unit*(1+c.Pigv/100),9) as DetalleValorVUnitarioConIGV,
---          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
-          Round(d.Precio_Unit,9) as DetalleValorVUnitario,
+          Round(d.Precio_Unit*(1+c.Pigv/100),2) as DetalleValorVUnitarioConIGV,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
           0,0,c.pigv as IGVPorcentaje,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end as IGVMonto,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end as DetalleTotal,
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
---          Case When left(Cte.TipDoc,3)='104' then '40' else  end 
-          Case When C.m_Trans_Gratuita>0  Then case When C.m_Trans_Gratuita=0 Then '21' else '13' end  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
-          case When C.m_Trans_Gratuita=0 Then '10' else '13' end end  -- Tipo de Afectacion
+          Case When left(Cte.TipDoc,3)='104' then  '40' else  
+          Case When C.m_Trans_Gratuita>0  Then  '13'  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+           '10'  end end  -- Tipo de Afectacion
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
