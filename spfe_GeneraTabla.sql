@@ -206,7 +206,7 @@ Declare @Id_Comprobante Int,
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Case When C.m_Trans_Gratuita>0 then d.Precio_Unit*(1+c.Pigv/100) else Round(d.Precio_Unit*(1+c.Pigv/100),2)end, --9
+          Round(d.Precio_Unit*(1+c.Pigv/100),2), --9
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
           0,0,c.pigv,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
@@ -228,6 +228,16 @@ Declare @Id_Comprobante Int,
     Order By d.Item
 
     END
+
+
+
+
+GO
+SET QUOTED_IDENTIFIER OFF 
+GO
+SET ANSI_NULLS ON 
+GO
+
 
 
 
