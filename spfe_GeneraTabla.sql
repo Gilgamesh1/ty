@@ -76,14 +76,17 @@ Declare @Id_Comprobante Int
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
-          Case When left(Cte.TipDoc,3)='104' then C.CodCP else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
+--          Case When left(Cte.TipDoc,3)='104' then C.CodCP else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
+          Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  'PEN','USD',C.TipoCambio,
           Case When C.ImporteIgv=0 Then 0 else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
-          Case When C.m_Trans_Gratuita>0 Then 1 else 0 end,C.m_Trans_Gratuita,Case When C.m_Trans_Gratuita>0 Then 'SON CERO CON 00/100 SOLES' else NULL end,
+--          Case When C.m_Trans_Gratuita>0 Then 1 else 0 end,C.m_Trans_Gratuita,Case When C.m_Trans_Gratuita>0 Then 'SON CERO CON 00/100 SOLES' else NULL end,
+          Case When C.m_Trans_Gratuita>0 Then 1 else 0 end,C.m_Trans_Gratuita+C.ImporteIgv as ComprobanteMontoGratuito,Case When C.m_Trans_Gratuita>0 Then 'SON CERO CON 00/100 SOLES' else NULL end,
           PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
+--          Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
+          Case When C.m_Trans_Gratuita>0 Then Round(C.m_Trans_Gratuita+C.ImporteIgv,2) else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
           ImporteTotalDscto,
 	  Case When C.m_Trans_Gratuita>0 Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
           else dbo.numero_a_letras(Round(C.M_Base_Imponible+Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,2),Case When C.codmoneda='1' Then 'DOLARES AMERICANOS' else 'SOLES' End)  end,
@@ -143,17 +146,18 @@ Declare @Id_Comprobante Int
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
-          Round(d.Precio_Unit*(1+c.Pigv/100),9),
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
-          0,0,c.pigv,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end,
+          Round(d.Precio_Unit*(1+c.Pigv/100),9) as DetalleValorVUnitarioConIGV,
+--          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
+          Round(d.Precio_Unit,9) as DetalleValorVUnitario,
+          0,0,c.pigv as IGVPorcentaje,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end as IGVMonto,
+          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end as DetalleTotal,
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
-          Case When left(Cte.TipDoc,3)='104' then '40' else 
+--          Case When left(Cte.TipDoc,3)='104' then '40' else  end 
           Case When C.m_Trans_Gratuita>0  Then case When C.m_Trans_Gratuita=0 Then '21' else '13' end  else -- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
-          case When C.m_Trans_Gratuita=0 Then '10' else '13' end end end   -- Tipo de Afectacion
+          case When C.m_Trans_Gratuita=0 Then '10' else '13' end end  -- Tipo de Afectacion
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
