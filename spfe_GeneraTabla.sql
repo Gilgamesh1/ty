@@ -8,9 +8,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER       PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER        PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -83,7 +84,7 @@ Declare @Id_Comprobante Int,
         ComercioExteriorMontoCIF,impuestoisc,impuestoOtros,
         PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
         PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-	Estado)
+	Estado,MultiGlosa)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO','PUEBLO LIBRE','LIMA','LIMA',
 	  '2611843' AS Telefono,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
@@ -115,7 +116,6 @@ Declare @Id_Comprobante Int,
 	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8)  end,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then '01' else '' end end,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
-	  C.FecDoc,C.FecVen,'' as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
           Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else '01' end end As TipoOperacion,
           --
@@ -124,13 +124,13 @@ Declare @Id_Comprobante Int,
 	  0,0,0,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
-          -1
-     From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
+          -1,c.Observacion
+     From igt_parametro ip,VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
    --                             left Join Concepto Con on C.Concepto=Con.Concepto
     Where C.CodEmp=@Empresa 
       And C.TipDoc=@TipoDoc 
       And C.SerDoc=@Serie 
-      And C.NumDoc=@Numero
+      And C.NumDoc=@Numero and ip.cod_dominio='00008' and ip.cod_parametro=c.cond_pago
 			
    -- REasignar el nuevo valor de @Id_Comprobante			   
    Select @Id_Comprobante=IdFE 
@@ -227,24 +227,15 @@ Declare @Id_Comprobante Int,
       And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
     Order By d.Item
 
+
     END
 
 
 
 
-GO
-SET QUOTED_IDENTIFIER OFF 
-GO
-SET ANSI_NULLS ON 
-GO
-
-
-
-
 
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
-
