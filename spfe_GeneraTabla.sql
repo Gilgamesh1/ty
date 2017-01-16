@@ -116,6 +116,7 @@ Declare @Id_Comprobante Int,
 	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8)  end,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then '01' else '' end end,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
+	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
           Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else '01' end end As TipoOperacion,
           --
