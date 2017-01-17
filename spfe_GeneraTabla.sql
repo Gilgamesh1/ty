@@ -11,7 +11,7 @@ GO
 
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER        PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER       PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -58,7 +58,8 @@ Declare @Id_Comprobante Int,
       And SerDoc=@Serie 
       And NumDoc=@Numero
       And Isnull(Anulado,0)<>1
-      And Left(DesArt,10)='- ADELANTO'
+--    And Left(DesArt,10)='- ADELANTO'
+      And flgadelanto='1'
 
    -- Cabecera
    Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
@@ -126,12 +127,13 @@ Declare @Id_Comprobante Int,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
           -1,c.Observacion
-     From igt_parametro ip,VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
+     From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
+	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
    --                             left Join Concepto Con on C.Concepto=Con.Concepto
     Where C.CodEmp=@Empresa 
       And C.TipDoc=@TipoDoc 
       And C.SerDoc=@Serie 
-      And C.NumDoc=@Numero and ip.cod_dominio='00008' and ip.cod_parametro=c.cond_pago
+      And C.NumDoc=@Numero and ip.cod_dominio='00008' 
 			
    -- REasignar el nuevo valor de @Id_Comprobante			   
    Select @Id_Comprobante=IdFE 
@@ -142,6 +144,7 @@ Declare @Id_Comprobante Int,
       and ComprobanteSerie=Case When @TipoDoc='NCR' Then Case When @TDREF='FAC' then 'F' else 'B' End else Left(@Serie,1) end+'0'+Right(@Serie,2)
       And ComprobanteNumero=@Numero
 
+    PRINT N'@Id_Comprobante: '+ cast(@Id_Comprobante as nvarchar(30));  
   --
    Update FE_Comprobantes...FE_Cabecera Set IdFacturacion=@id_Comprobante where idFE=@Id_Comprobante
 
@@ -153,7 +156,8 @@ Declare @Id_Comprobante Int,
       And SerDoc=@Serie 
       And NumDoc=@Numero
       And Isnull(Anulado,0)<>1
-      And Left(DesArt,24)='000000-00     - ADELANTO'
+      --And Left(DesArt,24)='000000-00     - ADELANTO'
+      And flgadelanto='1'
    -- 
    If ISNULL(@ItemAnticipo,0)>0 
    Begin
@@ -165,25 +169,31 @@ Declare @Id_Comprobante Int,
             @PrepagoDescripcion Varchar(100)
 
     Select Top 1 @PrepagoMonto=Round(Abs(Total*(1+c.Pigv/100)),2),@PrepagoValor=Round(Abs(Total),2),
-                 @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,1)+'-'+d.NumDocref, -- '000000-00     - ADELANTO  FAC-F01-00046436'
-                 @PrepagoFecha=d.Fecha,
-                 @PrepagoDescripcion=Left(DesArt,24)
-     From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
+                @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,1)+'-'+d.NumDocref, -- '000000-00     - ADELANTO  FAC-F01-00046436'
+                @PrepagoFecha=d.Fecha,
+                @PrepagoDescripcion=Left(DesArt,24)
+    From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
     Where d.CodEmp=@Empresa 
       And d.TipDoc=@TipoDoc 
       And d.SerDoc=@Serie 
       And d.NumDoc=@Numero
       And Isnull(d.Anulado,0)<>1
-      And Left(d.DesArt,24)='000000-00     - ADELANTO'
+--      And Left(d.DesArt,24)='000000-00     - ADELANTO'
+      And flgadelanto='1'
+    PRINT N'@PrepagoMonto: '+ cast(@Id_Comprobante as nvarchar(30));  
+    PRINT N'@PrepagoValor: '+ cast(@Id_Comprobante as nvarchar(30));  
+    PRINT N'@PrepagoSerieNumero: '+ @PrepagoSerieNumero;  
+    PRINT N'@PrepagoFecha: '+ cast(@Id_Comprobante as nvarchar(30));  
+    PRINT N'@PrepagoDescripcion: '+ @PrepagoDescripcion;  
               
-    Update FE_Comprobantes...FE_Cabecera 
-       Set PrepagoCodigo=Case When ComprobanteTipo='01' Then '02' else '03' End,
-           ComprobanteTotalPrepago=@PrepagoValor,PrepagoMonto=@PrepagoMonto,PrepagoValor=@PrepagoValor,
-           PrepagoCodigoInstruccion=@PrepagoSerieNumero,
-           PrepagoRucEmisor=EmpresaRUC,PrepagoTipoDocumentoIdentidad=EmpresaTipoDocumento,
-           PrepagoFechaRecepcion=@PrepagoFecha,PrepagoDescripcion=@PrepagoDescripcion,
-           PrepagoEnvio=1
-     Where idFE=@Id_Comprobante
+--    Update FE_Comprobantes...FE_Cabecera 
+--       Set PrepagoCodigo=Case When ComprobanteTipo='01' Then '02' else '03' End,
+--           ComprobanteTotalPrepago=@PrepagoValor,PrepagoMonto=@PrepagoMonto,PrepagoValor=@PrepagoValor,
+--           PrepagoCodigoInstruccion=@PrepagoSerieNumero,
+--           PrepagoRucEmisor=EmpresaRUC,PrepagoTipoDocumentoIdentidad=EmpresaTipoDocumento,
+--           PrepagoFechaRecepcion=@PrepagoFecha,PrepagoDescripcion=@PrepagoDescripcion,
+--           PrepagoEnvio=1
+--     Where idFE=@Id_Comprobante
    End
    ---
 
@@ -216,7 +226,8 @@ Declare @Id_Comprobante Int,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
           Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
-          Case When C.m_Trans_Gratuita>0  Then '13' else '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+          Case When C.m_Trans_Gratuita>0  Then '13' else
+	  Case When @ItemAnticipo>0 then '10' else '04' end end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
@@ -225,7 +236,7 @@ Declare @Id_Comprobante Int,
       And d.NumDoc=@Numero
       And Isnull(D.Anulado,0)<>1
       And Isnull(d.Total,0)>0
-      And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
+--      And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
     Order By d.Item
 
 
