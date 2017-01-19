@@ -4,14 +4,9 @@ SET ANSI_NULLS ON
 GO
 
 
-
-
-
-
-
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER        PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER           PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -22,7 +17,13 @@ AS
 
 Declare @Id_Comprobante Int, 
         @ItemAnticipo   Int,
-        @Anticipo       Varchar(1)
+	@CierreAnticipo Int,
+	@TotalDetalles  Int,
+        @Anticipo       Varchar(1),
+	@Codref		varchar(3),
+	@SerRef		varchar(4),
+	@NumRef		varchar(10),
+        @PrepagoFecha	Datetime
 --BEGIN TRANSACTION
 
 
@@ -58,7 +59,8 @@ Declare @Id_Comprobante Int,
       And SerDoc=@Serie 
       And NumDoc=@Numero
       And Isnull(Anulado,0)<>1
-      And Left(DesArt,10)='- ADELANTO'
+--    And Left(DesArt,10)='- ADELANTO'
+      And flgadelanto='1'
 
    -- Cabecera
    Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
@@ -92,11 +94,11 @@ Declare @Id_Comprobante Int,
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
-          Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
+          Case When left(Cte.TipDoc,3)='104' then case When C.TipDoc='NCR' Then '6' else'0' end else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
           Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  'PEN','USD',C.TipoCambio,
-          Case When C.ImporteIgv=0 Then 0 else Round(C.M_Base_Imponible,2) end as ValorGravado,
+          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
           Case When C.m_Trans_Gratuita>0 then C.m_Trans_Gratuita+C.ImporteIgv else C.m_Trans_Gratuita end as ComprobanteMontoGratuito,
           PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
@@ -118,7 +120,8 @@ Declare @Id_Comprobante Int,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
 	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
-          Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else '01' end end As TipoOperacion,
+          Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else 
+						 Case When left(Cte.TipDoc,3)='103' then '03' else '01' end end end As TipoOperacion,
           --
 	  0,0,
 	  0,0,0,
@@ -126,12 +129,13 @@ Declare @Id_Comprobante Int,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
           -1,c.Observacion
-     From igt_parametro ip,VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
+     From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
+	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
    --                             left Join Concepto Con on C.Concepto=Con.Concepto
     Where C.CodEmp=@Empresa 
       And C.TipDoc=@TipoDoc 
       And C.SerDoc=@Serie 
-      And C.NumDoc=@Numero and ip.cod_dominio='00008' and ip.cod_parametro=c.cond_pago
+      And C.NumDoc=@Numero and ip.cod_dominio='00008' 
 			
    -- REasignar el nuevo valor de @Id_Comprobante			   
    Select @Id_Comprobante=IdFE 
@@ -142,39 +146,47 @@ Declare @Id_Comprobante Int,
       and ComprobanteSerie=Case When @TipoDoc='NCR' Then Case When @TDREF='FAC' then 'F' else 'B' End else Left(@Serie,1) end+'0'+Right(@Serie,2)
       And ComprobanteNumero=@Numero
 
+    PRINT N'@Id_Comprobante: '+ cast(@Id_Comprobante as nvarchar(30));  
   --
    Update FE_Comprobantes...FE_Cabecera Set IdFacturacion=@id_Comprobante where idFE=@Id_Comprobante
 
    -- Busqueda de Anticipos
-
-   Select @ItemAnticipo=COUNT(*) From VNT_DOC_DETALLE 
+  Select @ItemAnticipo=COUNT(*) From VNT_DOC_DETALLE 
     Where CodEmp=@Empresa 
-      And TipDoc=@TipoDoc 
-      And SerDoc=@Serie 
-      And NumDoc=@Numero
-      And Isnull(Anulado,0)<>1
-      And Left(DesArt,24)='000000-00     - ADELANTO'
+      And TipDoc=@TipoDoc And SerDoc=@Serie 
+      And NumDoc=@Numero And Isnull(Anulado,0)<>1
+      And flgadelanto='1'
+
+   -- Busqueda de Cierre de Anticipos
+   Select @Codref=coddocref,
+	@SerRef=serdocref,
+	@NumRef=numdocref,
+	@PrepagoFecha=fecha,
+        @CierreAnticipo=COUNT(*) From VNT_DOC_DETALLE 
+    Where CodEmp=@Empresa 
+      And TipDoc=@TipoDoc And SerDoc=@Serie 
+      And NumDoc=@Numero And Isnull(Anulado,0)<>1
+      And precio_unit<0 group by coddocref,serdocref,numdocref,fecha
+
    -- 
-   If ISNULL(@ItemAnticipo,0)>0 
+   If ISNULL(@CierreAnticipo,0)>0 
    Begin
 
     DECLARE @PrepagoMonto float,
             @PrepagoValor Float,
             @PrepagoSerieNumero Varchar(30),
-            @PrepagoFecha Datetime,
             @PrepagoDescripcion Varchar(100)
 
     Select Top 1 @PrepagoMonto=Round(Abs(Total*(1+c.Pigv/100)),2),@PrepagoValor=Round(Abs(Total),2),
-                 @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,1)+'-'+d.NumDocref, -- '000000-00     - ADELANTO  FAC-F01-00046436'
-                 @PrepagoFecha=d.Fecha,
-                 @PrepagoDescripcion=Left(DesArt,24)
-     From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
+                @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,2)+'-'+convert(nvarchar ,cast(d.NumDocref as int)), -- '000000-00     - ADELANTO  FAC-F01-00046436'
+                @PrepagoDescripcion=DesArt
+    From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
     Where d.CodEmp=@Empresa 
       And d.TipDoc=@TipoDoc 
       And d.SerDoc=@Serie 
       And d.NumDoc=@Numero
       And Isnull(d.Anulado,0)<>1
-      And Left(d.DesArt,24)='000000-00     - ADELANTO'
+      And precio_unit<0
               
     Update FE_Comprobantes...FE_Cabecera 
        Set PrepagoCodigo=Case When ComprobanteTipo='01' Then '02' else '03' End,
@@ -187,8 +199,12 @@ Declare @Id_Comprobante Int,
    End
    ---
 
-   -- Detalle
+   --Calculo de total Detalles
+   select @TotalDetalles=count(*)+1 
+     From VNT_DOC_DETALLE D where d.CodEmp=@Empresa And d.TipDoc=@TipoDoc And d.SerDoc=@Serie And d.NumDoc=@Numero
+     and d.anulado<>1 And d.Total>0
 
+   -- Detalle
    Insert into FE_Comprobantes...FE_Detalle(idFacturacion,DetalleItem,DetalleCodigo,DetalleDescripcion,
           DetalleUnidad,DetalleCantidad,DetalleValorVUnitarioConIGV,DetalleValorVUnitario,
           DescuentoPorcentaje,DescuentoMonto,IGVPorcentaje,IGVMonto,DetalleTotal,
@@ -197,13 +213,14 @@ Declare @Id_Comprobante Int,
    Select @Id_Comprobante,
          -- 1 as item,
 --ROW_NUMBER() OVER(PARTITION BY D.Id_Almacen ORDER BY d.Item ASC) AS Item, -- Antes era 1, 26/07/2016
-     (SELECT COUNT(i.CodArt) FROM VNT_DOC_DETALLE i
-     Where i.CodEmp=@Empresa 
-       And i.TipDoc=@TipoDoc 
-       And i.SerDoc=@Serie 
-       And i.NumDoc=@Numero
---     And i.CodArt>=d.CodArt) AS Item,
-       And i.Item>=d.Item) AS Item,
+          (SELECT @TotalDetalles-COUNT(i.CodArt) FROM VNT_DOC_DETALLE i
+            Where i.CodEmp=@Empresa 
+              And i.TipDoc=@TipoDoc 
+              And i.SerDoc=@Serie 
+              And i.NumDoc=@Numero
+              And Isnull(i.Anulado,0)<>1
+              And Isnull(i.Total,0)>0
+              And i.Item>=d.Item) AS Item,  --     And i.CodArt>=d.CodArt) AS Item,
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
           'NIU',d.CanArt,
@@ -216,7 +233,8 @@ Declare @Id_Comprobante Int,
           Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
           Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
           Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
-          Case When C.m_Trans_Gratuita>0  Then '13' else '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+          Case When C.m_Trans_Gratuita>0  Then '13' else
+	  '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
@@ -225,13 +243,11 @@ Declare @Id_Comprobante Int,
       And d.NumDoc=@Numero
       And Isnull(D.Anulado,0)<>1
       And Isnull(d.Total,0)>0
-      And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
+--      And Left(d.DesArt,24)<>'000000-00     - ADELANTO'
     Order By d.Item
 
 
     END
-
-
 
 
 
@@ -240,3 +256,4 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
+
