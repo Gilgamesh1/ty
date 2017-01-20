@@ -22,6 +22,7 @@ Declare @Id_Comprobante Int,
 	@CierreAnticipo Int,
 	@TotalDetalles  Int,
 	@NCRGratuita	Int,
+	@IGV		Int,
         @Anticipo       Varchar(1),
 	@Codref		varchar(3),
 	@SerRef		varchar(4),
@@ -205,8 +206,11 @@ Declare @Id_Comprobante Int,
    ---
 
    --NCR con Operaciones Gratuitas
-   Select @Codref=coddocref,@SerRef=serdocref,@NumRef=numdocref From VNT_DOC 
-    Where CodEmp=@Empresa And TipDoc=@TipoDoc And SerDoc=@Serie  And NumDoc=@Numero
+   Select @Codref=coddocref,@SerRef=serdocref,@NumRef=numdocref,@IGV=pigv From VNT_DOC 
+    Where CodEmp=@Empresa And TipDoc=@TipoDoc And SerDoc=@Serie And NumDoc=@Numero
+
+
+    PRINT N'@IGV: '+ cast(@IGV as nvarchar(30)); 
 
    select @NCRGratuita=count(*) from vnt_doc v where
     v.tipdoc=@Codref and v.serdoc=@SerRef and v.numdoc=@NumRef and cond_pago='021'
@@ -246,9 +250,11 @@ Declare @Id_Comprobante Int,
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '2' else '1' end as DetalleDeterminante, -- Determinante
           Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
+	  Case When D.TipDoc='NDB' and @IGV=0 then '30' else
           Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
           Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0  Then '13' else
-	  '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+	  '10' end end
+	  end  30-- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
@@ -270,3 +276,4 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
+
