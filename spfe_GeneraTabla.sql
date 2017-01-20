@@ -4,9 +4,11 @@ SET ANSI_NULLS ON
 GO
 
 
+
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER           PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER             PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -19,6 +21,7 @@ Declare @Id_Comprobante Int,
         @ItemAnticipo   Int,
 	@CierreAnticipo Int,
 	@TotalDetalles  Int,
+	@NCRGratuita	Int,
         @Anticipo       Varchar(1),
 	@Codref		varchar(3),
 	@SerRef		varchar(4),
@@ -94,14 +97,14 @@ Declare @Id_Comprobante Int,
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
-          Case When left(Cte.TipDoc,3)='104' then case When C.TipDoc='NCR' Then '6' else'0' end else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
+          Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
           Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then isnull(cte.RucCP,C.CodCP) else cte.RucCP end end,C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  'PEN','USD',C.TipoCambio,
           Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end as ValorNoGravado,0,
           Case When C.m_Trans_Gratuita>0 then C.m_Trans_Gratuita+C.ImporteIgv else C.m_Trans_Gratuita end as ComprobanteMontoGratuito,
-          PIGV,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
+          PIGV as ImpuestoTasaIgv,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end,
           ImporteTotalDscto,
 	  Case When C.m_Trans_Gratuita>0 Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
@@ -110,14 +113,16 @@ Declare @Id_Comprobante Int,
 	  Case When C.m_Trans_Gratuita=0 then 0 else 1 end, -- ComprobanteCheckGratuito
 	  Case When C.m_Trans_Gratuita=0 then NULL else 'SON CERO CON 00/100 SOLES' end, -- ComprobanteMontoLetrasGratuito
           --
-          10.00,   -- tasa de detraccisn
-          Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0),
+          Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
+          Case When C.TipDoc='NCR' then 0 else Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0) end as DetraccionMonto,
           '00003108198',
-	  case When @TipoDoc IN ('NCR','NDB') then Case When C.CodDocRef='FAC' Then '01' Else Case When C.CodDocRef='BOL' Then '03' Else '08' end end Else '' End,
-	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End,
-	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8)  end,
-	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then '01' else '' end end,
-          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end,
+	  case When @TipoDoc IN ('NCR','NDB') then Case When C.CodDocRef='FAC' Then '01' Else Case When C.CodDocRef='BOL' Then '03' Else '08' end end Else '' End as ComprobanteRefTipo,
+--	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End  as ComprobanteRefSerie,
+	  case When @TipoDoc IN ('NCR','NDB') then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) Else '' End  as ComprobanteRefSerie,
+	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8) end as ComprobanteRefNumero,
+	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
+--          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
+          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
 	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,'1',
           c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
           Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else 
@@ -199,6 +204,15 @@ Declare @Id_Comprobante Int,
    End
    ---
 
+   --NCR con Operaciones Gratuitas
+   Select @Codref=coddocref,@SerRef=serdocref,@NumRef=numdocref From VNT_DOC 
+    Where CodEmp=@Empresa And TipDoc=@TipoDoc And SerDoc=@Serie  And NumDoc=@Numero
+
+   select @NCRGratuita=count(*) from vnt_doc v where
+    v.tipdoc=@Codref and v.serdoc=@SerRef and v.numdoc=@NumRef and cond_pago='021'
+
+    PRINT N'@NCRGratuita: '+ cast(@NCRGratuita as nvarchar(30)); 
+
    --Calculo de total Detalles
    select @TotalDetalles=count(*)+1 
      From VNT_DOC_DETALLE D where d.CodEmp=@Empresa And d.TipDoc=@TipoDoc And d.SerDoc=@Serie And d.NumDoc=@Numero
@@ -223,17 +237,17 @@ Declare @Id_Comprobante Int,
               And i.Item>=d.Item) AS Item,  --     And i.CodArt>=d.CodArt) AS Item,
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
-          'NIU',d.CanArt,
-          Round(d.Precio_Unit*(1+c.Pigv/100),2), --9
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Precio_Unit,9) end,
+          'NIU',d.CanArt as DetalleCantidad,
+          Round(d.Precio_Unit*(1+c.Pigv/100),2) as DetalleValorVUnitarioConIGV, --9
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then 0 else Round(d.Precio_Unit,9) end as DetalleValorVUnitario,
           0,0,c.pigv,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end,
-          Case When C.m_Trans_Gratuita>0 Then 0 else Round(d.Total,2) end,
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then 0 else Round(d.Total*(c.Pigv/100),2) end as IGVMonto,
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then 0 else Round(d.Total,2) end as DetalleTotal,
           0,0,0,0,
-          Case When C.m_Trans_Gratuita>0 Then '2' else '1' end, -- Determinante
-          Case When C.m_Trans_Gratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '2' else '1' end as DetalleDeterminante, -- Determinante
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '02' else '01' end,  --- Solo en gratuitos va 02 Tipo Precio
           Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
-          Case When C.m_Trans_Gratuita>0  Then '13' else
+          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0  Then '13' else
 	  '10' end end   -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
@@ -256,4 +270,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
