@@ -9,9 +9,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER                PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER                 PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -113,7 +114,8 @@ Declare @Id_Comprobante Int,
 	  end as ComprobanteMontoInafecto,0,
           Case When C.m_Trans_Gratuita>0 then C.m_Trans_Gratuita+C.ImporteIgv else C.m_Trans_Gratuita end as ComprobanteMontoGratuito,
           PIGV as ImpuestoTasaIgv,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
-	  Case When C.TipDoc='NDB' and  C.ImporteIgv=0 then 0 else
+--	  Case When C.TipDoc='NDB' and  C.ImporteIgv=0 then 0 else
+	  Case When C.ImporteIgv=0 then case when C.TipDoc='NDB' then Round(C.M_Base_Imponible+C.ImporteIgv,2) else 0 end else
           Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.M_Base_Imponible+C.ImporteIgv,2) end
 	  end as ComprobanteImporteTotal,
           ImporteTotalDscto,
@@ -126,11 +128,41 @@ Declare @Id_Comprobante Int,
           Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
           Case When C.TipDoc='NCR' then 0 else Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0) end as DetraccionMonto,
           '00003108198',
-	  case When @TipoDoc IN ('NCR','NDB') then Case When C.CodDocRef='FAC' Then '01' Else Case When C.CodDocRef='BOL' Then '03' Else '08' end end Else '' End as ComprobanteRefTipo,
+	  case When @TipoDoc IN ('NCR','NDB')
+	  then
+		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
+		then
+			''
+		else
+			Case When C.CodDocRef='FAC'
+			Then
+				'01'
+			Else
+				Case When C.CodDocRef='BOL'
+				then
+					'03'
+				Else
+				 	'08'
+				end
+			end
+		end
+	  Else
+		 ''
+	  End as ComprobanteRefTipo,
 --	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End  as ComprobanteRefSerie,
-	  case When @TipoDoc IN ('NCR','NDB') then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) Else '' End  as ComprobanteRefSerie,
+	  case When @TipoDoc IN ('NCR','NDB')
+	  then
+		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
+		then 
+			''
+		else
+		 Left(SerDocRef,1)+'0'+Right(SerDocRef,2)
+		end
+          Else
+		 ''
+	  End  as ComprobanteRefSerie,
 --	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8) end as ComprobanteRefNumero,
-	  case When @TipoDoc IN ('NCR','NDB') then convert(nvarchar ,cast(C.NumDocRef as int)) end as ComprobanteRefNumero,
+	  case When @TipoDoc IN ('NCR','NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '' else convert(nvarchar ,cast(C.NumDocRef as int)) end else '' end as ComprobanteRefNumero,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
 --          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
@@ -263,10 +295,22 @@ Declare @Id_Comprobante Int,
           0,0,0,0,
           Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '2' else '1' end as DetalleDeterminante, -- Determinante
           Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0 Then '02' else '01' end as DetalleCodigoTipoPrecio,  --- Solo en gratuitos va 02 Tipo Precio
-	  Case When D.TipDoc='NDB' and @IGV=0 then '30' else
-          Case When left(Cte.TipDoc,3)='104' then Case When @TipoDoc='BOL' Then '10' else '40' end else 
-          Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0  Then '13' else
-	  '10' end end
+	  Case When left(Cte.TipDoc,3)='104' then
+		Case When @TipoDoc='BOL' Then
+		 '10'
+		else
+		 '40'
+		end
+	  else
+	        Case When C.m_Trans_Gratuita>0 or @NCRGratuita>0  Then
+		 '13'
+		else
+			Case When D.TipDoc='NDB' and @IGV=0 then
+			 '30' 
+			else
+			 '10'
+			end
+		end
 	  end  -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
@@ -282,10 +326,24 @@ Declare @Id_Comprobante Int,
 
     END
 
+    IF @NCRGratuita>0 
+    begin
+	declare @MontoTotal float
 
+    	PRINT N'Entro a revisar comprobante gratuito de nota de credito'; 
+	
+	select @MontoTotal=ComprobanteImporteTotal from FE_Comprobantes...FE_Cabecera Where idFE=@Id_Comprobante 
 
-
-
+    	PRINT N'@MontoTotal: '+ cast(@MontoTotal as nvarchar(30)); 
+	Update FE_Comprobantes...FE_Cabecera 
+        Set 
+--          ComprobanteMontoGratuito=0,
+--		ComprobanteMontoGravado =0,
+--ComprobanteMontoInafecto=0,
+ImpuestoIgv=0,
+ComprobanteImporteTotal=0
+	  Where idFE=@Id_Comprobante 
+    end
 
 GO
 SET QUOTED_IDENTIFIER OFF 
