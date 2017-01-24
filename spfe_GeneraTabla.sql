@@ -5,14 +5,9 @@ GO
 
 
 
-
-
-
-
-
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER                 PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER                   PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -130,10 +125,10 @@ Declare @Id_Comprobante Int,
           '00003108198',
 	  case When @TipoDoc IN ('NCR','NDB')
 	  then
-		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
-		then
-			''
-		else
+--		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
+--		then
+--			''
+--		else
 			Case When C.CodDocRef='FAC'
 			Then
 				'01'
@@ -145,24 +140,28 @@ Declare @Id_Comprobante Int,
 				 	'08'
 				end
 			end
-		end
+--		end
 	  Else
 		 ''
 	  End as ComprobanteRefTipo,
 --	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End  as ComprobanteRefSerie,
 	  case When @TipoDoc IN ('NCR','NDB')
 	  then
-		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
-		then 
-			''
-		else
+--		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
+--		then 
+--			''
+--		else
 		 Left(SerDocRef,1)+'0'+Right(SerDocRef,2)
-		end
+--		end
           Else
 		 ''
 	  End  as ComprobanteRefSerie,
 --	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8) end as ComprobanteRefNumero,
-	  case When @TipoDoc IN ('NCR','NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '' else convert(nvarchar ,cast(C.NumDocRef as int)) end else '' end as ComprobanteRefNumero,
+	  case When @TipoDoc IN ('NCR','NDB') then
+-- case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '' else
+ convert(nvarchar ,cast(C.NumDocRef as int))
+-- end
+ else '' end as ComprobanteRefNumero,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
 --          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
@@ -344,6 +343,8 @@ ImpuestoIgv=0,
 ComprobanteImporteTotal=0
 	  Where idFE=@Id_Comprobante 
     end
+
+
 
 GO
 SET QUOTED_IDENTIFIER OFF 
