@@ -122,9 +122,12 @@ Declare @Id_Comprobante Int,
 	  Case When C.m_Trans_Gratuita=0 then 0 else 1 end, -- ComprobanteCheckGratuito
 	  Case When C.m_Trans_Gratuita=0 then NULL else 'SON CERO CON 00/100 SOLES' end, -- ComprobanteMontoLetrasGratuito
           --
-          Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
-          Case When C.TipDoc='NCR' then 0 else Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0) end as DetraccionMonto,
-          '00003108198',
+--          Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
+          0 as DetraccionPorcentaje,   -- tasa de detraccisn
+--          Case When C.TipDoc='NCR' then 0 else Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0) end as DetraccionMonto,
+          0 as DetraccionMonto,
+--          '00003108198',
+          '',
 	  case When @TipoDoc IN ('NCR','NDB')
 	  then
 		case when upper(Isnull(c.Observacion,''))='PENALIDAD'
@@ -355,4 +358,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
