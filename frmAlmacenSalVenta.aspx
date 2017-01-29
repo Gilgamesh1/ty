@@ -230,7 +230,7 @@
                                 <asp:DropDownList ID="ddlNroSerie" runat="server" Width="94px">
                                 </asp:DropDownList>
                                 <asp:TextBox ID="txtNroRef" runat="server" BorderWidth="1px" MaxLength="6" Width="103px" Enabled="False"></asp:TextBox>
-                                <asp:CheckBox ID="ChkGenera" runat="server" Checked="false" Width="210px" Visible="False" /></td>
+                                <asp:CheckBox ID="ChkGenera" runat="server" Checked="True" Width="210px" Visible="False" /></td>
                             <td style="width: 223px; height: 8px; text-align: right">
                                 <asp:Label ID="lblMoneda" runat="server" Visible="False"></asp:Label></td>
                             <td style="width: 36px; height: 8px; text-align: left">
