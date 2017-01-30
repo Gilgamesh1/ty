@@ -18,7 +18,7 @@ declare
  @decenas char(255),
  @centenas char(255),
  @especiales char(108),
- @decimales char(25),
+ @decimales char(30),
  @valor_entero char(9),
  @longitud int,
  @caracteres char(3), 
@@ -190,4 +190,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
