@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 15/01/2017 05:15:27 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 30/01/2017 05:36:52 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,8 +17,8 @@ ALTER PROCEDURE [dbo].[spi_AdicionaComprobantes]
 AS 
 
 insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-  EmpresaTelefono,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
-  ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
+  EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
+  ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
   TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
   ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteCheckGratuito,ComprobanteMontoGratuito,ComprobanteMontoLetrasGratuito,
   ImpuestoTasaigv,ImpuestoIgv,ComprobanteImporteTotal,ComprobanteDescuentoGlobal,ComprobanteMontoLetras,DetraccionPorcentaje,DetraccionMonto,NroCuenta,
@@ -34,8 +34,8 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
   Estado,MotivoAnulacion,ComprobanteMultiGlosa) 
  Select idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRuc,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-  EmpresaTelefono,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
-  ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
+  EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
+  ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
   TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
   ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteCheckGratuito,ComprobanteMontoGratuito,ComprobanteMontoLetrasGratuito,
   ImpuestoTasaigv,ImpuestoIgv,ComprobanteImporteTotal,ComprobanteDescuentoGlobal,ComprobanteMontoEnLetras,DetraccionPorcentaje,DetraccionMonto,NroCuenta,
