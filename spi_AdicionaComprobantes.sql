@@ -32,7 +32,7 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,impuestoIvap,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,ComprobanteMultiGlosa) 
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,Texto2) 
  Select idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRuc,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
   EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
   ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
@@ -49,7 +49,7 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,0,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,MultiGlosa
+  Estado,MotivoAnulacion,MultiGlosa,''
   from fe_comprobantes...fe_cabecera
  Where EmpresaRUC=@Empresa
    And ComprobanteTipo=@TipoDoc
@@ -66,6 +66,6 @@ insert into fe_detalle(IdDetalle,IdFacturacion,detalleItem,DetalleCodigo,Detalle
   Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
   DescuentoPorcentaje,DescuentoMonto,IgvPorcentaje,IgvMonto,DetalleTotal,
   IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
-  DetalleDeterminante,DetalleCodigoTipoPrecio,DetalleMultidescripcion,AfectacionIGV
+  DetalleDeterminante,DetalleCodigoTipoPrecio,'',AfectacionIGV
   from fe_comprobantes...fe_detalle
  Where IdFacturacion=@IdFE

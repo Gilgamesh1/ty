@@ -5,7 +5,8 @@ GO
 
 
 
-ALTER  FUNCTION [dbo].[numero_a_letras]
+
+ALTER   FUNCTION [dbo].[numero_a_letras]
  (@monto numeric(14,2),
  @moneda char(100))
 RETURNS 
@@ -170,12 +171,9 @@ if @decimal > 0
      ltrim(rtrim(cast (@decimal as char(2))))   +
      '/100 ' + @moneda
 else
- select @decimales = '  ' + @moneda  -- + ' exactos'
+ select @decimales = ' y 00/100 ' + @moneda  -- + ' exactos'
 -- FINAL
-select @letras  = UPPER( '** '    +
-    rtrim(substring(@letras,1,255)) +
-    rtrim(@decimales)  +
-    ' **' )
+select @letras  = UPPER(rtrim(substring(@letras,1,255))+ rtrim(@decimales))
 
 --select 'letras' = UPPER(@letras)
 
@@ -185,8 +183,10 @@ end
 
 
 
+
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
+

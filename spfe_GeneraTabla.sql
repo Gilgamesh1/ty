@@ -7,9 +7,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER                     PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -33,7 +34,7 @@ Declare @Id_Comprobante Int,
 
 
   /* *******************************************
-  -- Datos para la Facturacisn Electrsnica 
+  -- Datos para la Facturacisn Electronica 
      *******************************************/
 
 --  Declare @Numero Varchar(8)
@@ -69,7 +70,7 @@ Declare @Id_Comprobante Int,
 
    -- Cabecera
    Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-	EmpresaTelefono,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
+	EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
         Receptoremail,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorRazonSocial,
 	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
         TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
@@ -93,10 +94,9 @@ Declare @Id_Comprobante Int,
         PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
 	Estado,MultiGlosa)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO','PUEBLO LIBRE','LIMA','LIMA',
-	  '2611843' AS Telefono,
+	  '2611843' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
-
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
 	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
@@ -120,7 +120,7 @@ Declare @Id_Comprobante Int,
           else dbo.numero_a_letras(Round(C.M_Base_Imponible+Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,2),Case When C.codmoneda='1' Then 'DOLARES AMERICANOS' else 'SOLES' End)  end,
 	  -- Linea adicionada en referencia para transferencia gratuita
 	  Case When C.m_Trans_Gratuita=0 then 0 else 1 end, -- ComprobanteCheckGratuito
-	  Case When C.m_Trans_Gratuita=0 then NULL else 'SON CERO CON 00/100 SOLES' end, -- ComprobanteMontoLetrasGratuito
+	  Case When C.m_Trans_Gratuita=0 then NULL else case When C.codmoneda='1' Then 'CERO CON 00/100 DOLARES AMERICANOS' else 'CERO CON 00/100 SOLES' end end, -- ComprobanteMontoLetrasGratuito
           --
 --          Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
           0 as DetraccionPorcentaje,   -- tasa de detraccisn
@@ -171,7 +171,7 @@ Declare @Id_Comprobante Int,
 --          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
 	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,'1',
-          c.OC,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
+          case when C.TipDoc='FAC' or C.TipDoc='BOL' then c.oc else '' end as ComprobanteNroOrdenCompra,'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
           Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else 
 						 Case When left(Cte.TipDoc,3)='103' then '03' else '01' end end end As TipoOperacion,
           --
@@ -183,6 +183,7 @@ Declare @Id_Comprobante Int,
           -1,c.Observacion
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
+	left join PER_PERSONAL p on c.codven=p.codpersonal
    --                             left Join Concepto Con on C.Concepto=Con.Concepto
     Where C.CodEmp=@Empresa 
       And C.TipDoc=@TipoDoc 
@@ -353,8 +354,10 @@ ComprobanteImporteTotal=0
 
 
 
+
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
+
