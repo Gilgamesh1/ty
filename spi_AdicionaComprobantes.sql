@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 31/01/2017 06:41:14 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 01/02/2017 06:24:26 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,7 +17,7 @@ ALTER PROCEDURE [dbo].[spi_AdicionaComprobantes]
 AS 
 
 insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-  EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
+  EmpresaCorreo,EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
   ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
   TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
   ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteCheckGratuito,ComprobanteMontoGratuito,ComprobanteMontoLetrasGratuito,
@@ -32,9 +32,11 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,impuestoIvap,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,ComprobanteMultiGlosa,Texto2,Texto1) 
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,Texto2,Texto1,
+  VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
+  ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3) 
  Select idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRuc,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-  EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
+  EmpresaCorreo,EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMOneda,ComprobanteCorreoElectronico,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorEmail,ReceptorRazonSocial,
   ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
   TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
   ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteCheckGratuito,ComprobanteMontoGratuito,ComprobanteMontoLetrasGratuito,
@@ -49,23 +51,24 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,0,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,MultiGlosa,'',texto1
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,'',texto1,
+  VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
+  ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3
   from fe_comprobantes...fe_cabecera
  Where EmpresaRUC=@Empresa
    And ComprobanteTipo=@TipoDoc
    And ComprobanteSerie=@Serie
    And ComprobanteNumero=@Numero
-
-
+   
 insert into fe_detalle(IdDetalle,IdFacturacion,detalleItem,DetalleCodigo,DetalleDescripcion,
   Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
   DescuentoPorcentaje,DescuentoMonto,IgvPorcentaje,IgvMonto,DetalleTotal,
   IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
-  DetalleDeterminante,DetalleCodigoTipoPrecio,DetalleMultidescripcion,AfectacionIGV) 
+  DetalleDeterminante,DetalleCodigoTipoPrecio,DetalleMultidescripcion,AfectacionIGV,DetalleUnidadMedidaEmisor) 
  Select IdDetalle,IdFacturacion,DetalleItem,DetalleCodigo,DetalleDescripcion,
   Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
   DescuentoPorcentaje,DescuentoMonto,IgvPorcentaje,IgvMonto,DetalleTotal,
   IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
-  DetalleDeterminante,DetalleCodigoTipoPrecio,'',AfectacionIGV
+  DetalleDeterminante,DetalleCodigoTipoPrecio,'',AfectacionIGV,DetalleUnidadMedidaEmisor
   from fe_comprobantes...fe_detalle
  Where IdFacturacion=@IdFE

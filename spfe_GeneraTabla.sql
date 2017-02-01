@@ -94,16 +94,36 @@ Declare @Id_Comprobante Int,
         ComercioExteriorMontoCIF,impuestoisc,impuestoOtros,
         PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
         PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-	Estado,MultiGlosa)
+	Estado,MultiGlosa,
+        VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
+        ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
 	  '2611843' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
+
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
-	  'finanzas@exituno.com.pe' as emailcliente,   --Cte.MailCP,
+	  'finanzas@exituno.com.pe' as Receptoremail,   --Cte.MailCP,
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
-          Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then isnull(rtrim(cte.RucCP),C.CodCP) else rtrim(cte.RucCP) end end,C.CodCP as CodigoCliente,C.Nom_CP,
+          Case When left(Cte.TipDoc,3)='104'
+	  then '-'
+	  else
+		case When @TipoDoc='BOL' then
+			 case when (C.M_Base_Imponible+C.m_Trans_Gratuita+C.ImporteIgv)>=700 then
+				rtrim(cte.RucCP)
+			 else
+				case when cte.RucCP='' then--case when isnull(rtrim(cte.RucCP),'')='' then
+					'-'
+				else
+					rtrim(cte.RucCP)
+			 	end
+			 end
+		else
+			rtrim(cte.RucCP)
+		end
+	  end as ReceptorRuc,
+	  C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
@@ -186,7 +206,11 @@ Declare @Id_Comprobante Int,
 	  0,0,0,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
-          -1,c.Observacion
+          -1,c.Observacion,
+          '4564' as VendedorCodigo,'dfdf@sdfs.com' as VendedorCorreo,
+	  rtrim(p.nombres)+' '+rtrim(p.apepaterno)+' '+rtrim(p.apematerno) as VendedorNombre,
+	  '545646' as VendedorTelefono,
+          'BANCO DE CREDITO DEL PERU' as ComprobanteGrillaDescripcion,'Soles' as ComprobanteGrillaValor1,'193-1415354004' as ComprobanteGrillaValor2,'002-193 001415 354004-13' as ComprobanteGrillaValor3
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
 	left join PER_PERSONAL p on c.codven=p.codpersonal
@@ -283,7 +307,7 @@ Declare @Id_Comprobante Int,
           DetalleUnidad,DetalleCantidad,DetalleValorVUnitarioConIGV,DetalleValorVUnitario,
           DescuentoPorcentaje,DescuentoMonto,IGVPorcentaje,IGVMonto,DetalleTotal,
           ISCMonto,ISCPorcentaje,CargoMonto,CargoPorcentaje,
-          DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV)
+          DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV,DetalleUnidadMedidaEmisor)
    Select @Id_Comprobante,
          -- 1 as item,
 --ROW_NUMBER() OVER(PARTITION BY D.Id_Almacen ORDER BY d.Item ASC) AS Item, -- Antes era 1, 26/07/2016
@@ -322,7 +346,8 @@ Declare @Id_Comprobante Int,
 			 '10'
 			end
 		end
-	  end  -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+	  end,  -- Tipo de Afectacion-- Decia '32'  21=Inafecto - Retiro  13-Gravado retiro
+	'NIU'
      From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
                             Left  Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP
     Where d.CodEmp=@Empresa 
@@ -371,4 +396,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
