@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 01/02/2017 06:24:26 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 03/02/2017 09:07:00 a.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -32,7 +32,7 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,impuestoIvap,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,ComprobanteMultiGlosa,Texto2,Texto1,
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,Texto2,Texto1,ComprobanteRefFechaDoc,
   VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
   ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3) 
  Select idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRuc,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
@@ -51,7 +51,7 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,0,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,ComprobanteMultiGlosa,'',texto1,
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,'',texto1,ComprobanteRefFechaDoc,
   VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
   ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3
   from fe_comprobantes...fe_cabecera
@@ -72,3 +72,4 @@ insert into fe_detalle(IdDetalle,IdFacturacion,detalleItem,DetalleCodigo,Detalle
   DetalleDeterminante,DetalleCodigoTipoPrecio,'',AfectacionIGV,DetalleUnidadMedidaEmisor
   from fe_comprobantes...fe_detalle
  Where IdFacturacion=@IdFE
+ 

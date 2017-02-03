@@ -9,9 +9,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER    PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER     PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -180,7 +181,7 @@ Declare @Id_Comprobante Int,
 		then 
 			''
 		else
-		 Left(SerDocRef,1)+'0'+Right(SerDocRef,2)
+		 upper(Left(SerDocRef,1)+'0'+Right(SerDocRef,2))
 		end
           Else
 		 ''
@@ -191,7 +192,7 @@ Declare @Id_Comprobante Int,
 	  convert(nvarchar ,cast(C.NumDocRef as int))
 	  end
 	  else '' end as ComprobanteRefNumero,
-	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else '10' end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
+	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else C.TipoNCR end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
 --          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
 	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,Case When C.TipDoc='FAC' or C.TipDoc='BOL' Then '10' Else '1' end as FormaPagoCodigo,
@@ -207,10 +208,13 @@ Declare @Id_Comprobante Int,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
           -1,c.Observacion,
-          '4564' as VendedorCodigo,'dfdf@sdfs.com' as VendedorCorreo,
+          p.codpersonal as VendedorCodigo,'dfdf@sdfs.com' as VendedorCorreo,
 	  rtrim(p.nombres)+' '+rtrim(p.apepaterno)+' '+rtrim(p.apematerno) as VendedorNombre,
-	  '545646' as VendedorTelefono,
-          'BANCO DE CREDITO DEL PERU' as ComprobanteGrillaDescripcion,'Soles' as ComprobanteGrillaValor1,'193-1415354004' as ComprobanteGrillaValor2,'002-193 001415 354004-13' as ComprobanteGrillaValor3
+	  '(01)261-1930 ' as VendedorTelefono,
+          case when @TipoDoc='NCR' then '' else 'BANCO DE CREDITO DEL PERU' end as ComprobanteGrillaDescripcion,
+	  case when @TipoDoc='NCR' then '' else 'Soles' end as ComprobanteGrillaValor1,
+	  case when @TipoDoc='NCR' then '' else '193-1415354004' end as ComprobanteGrillaValor2,
+	  case when @TipoDoc='NCR' then '' else '002-193001415354004-13'end as ComprobanteGrillaValor3
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
 	left join PER_PERSONAL p on c.codven=p.codpersonal
@@ -254,14 +258,13 @@ Declare @Id_Comprobante Int,
    -- 
    If ISNULL(@CierreAnticipo,0)>0 
    Begin
-
     DECLARE @PrepagoMonto float,
             @PrepagoValor Float,
             @PrepagoSerieNumero Varchar(30),
             @PrepagoDescripcion Varchar(100)
 
     Select Top 1 @PrepagoMonto=Round(Abs(Total*(1+c.Pigv/100)),2),@PrepagoValor=Round(Abs(Total),2),
-                @PrepagoSerieNumero=left(d.SerDocRef,1)+'0'+Right(d.SerDocRef,2)+'-'+convert(nvarchar ,cast(d.NumDocref as int)), -- '000000-00     - ADELANTO  FAC-F01-00046436'
+                @PrepagoSerieNumero=upper(left(d.SerDocRef,1))+'0'+Right(d.SerDocRef,2)+'-'+convert(nvarchar ,cast(d.NumDocref as int)), -- '000000-00     - ADELANTO  FAC-F01-00046436'
                 @PrepagoDescripcion=DesArt
     From VNT_DOC_DETALLE D Inner Join VNT_DOC c on d.codEmp=c.CodEmp And D.TipDoc=c.TipDoc and D.SerDoc=C.SerDoc And D.NumDoc=C.NumDoc
     Where d.CodEmp=@Empresa 
@@ -296,6 +299,18 @@ Declare @Id_Comprobante Int,
     v.tipdoc=@Codref and v.serdoc=@SerRef and v.numdoc=@NumRef and cond_pago='021'
 
     PRINT N'@NCRGratuita: '+ cast(@NCRGratuita as nvarchar(30)); 
+
+
+   --Fecha de Referencia
+PRINT N'Fecha de Referencia -Inicio'; 
+   If @TipoDoc='NCR' or @TipoDoc='NDB'
+   Begin
+	declare @fechaRef datetime;
+	select @fechaRef=fecdoc from vnt_doc where tipdoc=@Codref and serdoc=@SerRef and numdoc=@NumRef;
+	PRINT N'@fechaRef: '+ cast(@fechaRef as nvarchar(100)); --@fechaRef
+	Update FE_Comprobantes...FE_Cabecera Set ComprobanteRefFechaDoc=@fechaRef Where idFE=@Id_Comprobante;
+   End
+PRINT N'Fecha de Referencia -Fin'; 
 
    --Calculo de total Detalles
    select @TotalDetalles=count(*)+1 
@@ -371,9 +386,10 @@ Declare @Id_Comprobante Int,
 	Update FE_Comprobantes...FE_Cabecera 
         Set 
 --          ComprobanteMontoGratuito=0,
---		ComprobanteMontoGravado =0,
+		ComprobanteMontoGravado =0,
 --ComprobanteMontoInafecto=0,
 	ImpuestoIgv=0,
+	ComprobanteMontoEnLetras= case When ComprobanteMoneda='USD' Then 'CERO CON 00/100 DOLARES AMERICANOS' else 'CERO CON 00/100 SOLES' end,
 	ComprobanteImporteTotal=0 Where idFE=@Id_Comprobante 
     end
 
@@ -386,9 +402,10 @@ Declare @Id_Comprobante Int,
         Set 
           DetraccionPorcentaje=Case When ComprobanteTipo='07' then 0 else 10.00 end,
 	  DetraccionMonto = Case When ComprobanteTipo='07' then 0 else Round(Round(Case When ComprobanteMontoGratuito>0 Then 0 else ComprobanteImporteTotal end,2)*0.10,0) end,
-	  NroCuenta='00003108198'
+	  NroCuenta='00-000-372978'
 	Where idFE=@Id_Comprobante 
     end
+
 
 
 GO
