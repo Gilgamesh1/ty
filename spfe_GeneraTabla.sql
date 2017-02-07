@@ -4,15 +4,9 @@ SET ANSI_NULLS ON
 GO
 
 
-
-
-
-
-
-
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER     PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -75,7 +69,7 @@ Declare @Id_Comprobante Int,
    Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
 	EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
         Receptoremail,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorRazonSocial,
-	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
+	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
         TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
         ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,
         ComprobanteMontoGratuito,
@@ -97,7 +91,10 @@ Declare @Id_Comprobante Int,
         PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
 	Estado,MultiGlosa,
         VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
-        ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3)
+        ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3,ComprobanteGrillaFlag,
+        ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,
+        ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
+        ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
 	  '2611843' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
@@ -125,7 +122,7 @@ Declare @Id_Comprobante Int,
 		end
 	  end as ReceptorRuc,
 	  C.CodCP as CodigoCliente,C.Nom_CP,
-          Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,   
+          Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,Cte.TelCP,
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
 --          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
@@ -211,12 +208,29 @@ Declare @Id_Comprobante Int,
           p.codpersonal as VendedorCodigo,'dfdf@sdfs.com' as VendedorCorreo,
 	  rtrim(p.nombres)+' '+rtrim(p.apepaterno)+' '+rtrim(p.apematerno) as VendedorNombre,
 	  '(01)261-1930 ' as VendedorTelefono,
-          case when @TipoDoc='NCR' then '' else 'BANCO DE CREDITO DEL PERU' end as ComprobanteGrillaDescripcion,
-	  case when @TipoDoc='NCR' then '' else 'Soles' end as ComprobanteGrillaValor1,
-	  case when @TipoDoc='NCR' then '' else '193-1415354004' end as ComprobanteGrillaValor2,
-	  case when @TipoDoc='NCR' then '' else '002-193001415354004-13'end as ComprobanteGrillaValor3
+          'BANCO DE CREDITO DEL PERU' as ComprobanteGrillaDescripcion,
+	  'Soles' as ComprobanteGrillaValor1,
+	  '193-1415354004' as ComprobanteGrillaValor2,
+	  '002-193 001415 354004-13' as ComprobanteGrillaValor3,
+          case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag,
+	  'BANCO DE CREDITO DEL PERU' as ComprobanteGrillaDescripcion1,
+	  'Dólares' as ComprobanteGrillaValor11,
+	  '193-1126022169' as ComprobanteGrillaValor21,
+	  '002-193-001126022169-19' as ComprobanteGrillaValor31,
+          case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag1,
+          'BANCO CONTINENTAL' as ComprobanteGrillaDescripcion2,
+	  'Soles' as ComprobanteGrillaValor12,
+	  '164-0100023345' as ComprobanteGrillaValor22,
+	  '011-164-000100023345-10' as ComprobanteGrillaValor32,
+	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag2,
+          'BANCO CONTINENTAL' as ComprobanteGrillaDescripcion3,
+	  'Dólares' as ComprobanteGrillaValor13,
+	  '164-0100023353' as ComprobanteGrillaValor23,
+	  '011-164-000100023353-14' as ComprobanteGrillaValor33,
+	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag3
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
+
 	left join PER_PERSONAL p on c.codven=p.codpersonal
    --                             left Join Concepto Con on C.Concepto=Con.Concepto
     Where C.CodEmp=@Empresa 
@@ -407,9 +421,9 @@ PRINT N'Fecha de Referencia -Fin';
     end
 
 
-
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
+
