@@ -96,7 +96,7 @@ Declare @Id_Comprobante Int,
         ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
         ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
-	  '2611843' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
+	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
 
@@ -126,10 +126,18 @@ Declare @Id_Comprobante Int,
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
 --          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
-          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,          
+          Case When C.ImporteIgv=0 Then
+		 Case When C.TipDoc='NDB' Then
+			0
+		 else
+			0
+		 end
+	  else
+		Round(C.M_Base_Imponible,2)
+	  end as ComprobanteMontoGravado,          
 	  Case When C.TipDoc='NDB' and C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 
 	  Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end
-	  end as ComprobanteMontoInafecto,0,
+	  end as ComprobanteMontoInafecto,0 as ComprobanteMontoExonerado,
           Case When C.m_Trans_Gratuita>0 then C.m_Trans_Gratuita+C.ImporteIgv else C.m_Trans_Gratuita end as ComprobanteMontoGratuito,
           PIGV as ImpuestoTasaIgv,Case When C.m_Trans_Gratuita>0 Then 0 else Round(C.ImporteIgv,2) end,
 --	  Case When C.TipDoc='NDB' and  C.ImporteIgv=0 then 0 else no desdocumentar
@@ -205,7 +213,7 @@ Declare @Id_Comprobante Int,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
           -1,c.Observacion,
-          p.codpersonal as VendedorCodigo,'dfdf@sdfs.com' as VendedorCorreo,
+          p.codpersonal as VendedorCodigo,'' as VendedorCorreo,
 	  rtrim(p.nombres)+' '+rtrim(p.apepaterno)+' '+rtrim(p.apematerno) as VendedorNombre,
 	  '(01)261-1930 ' as VendedorTelefono,
           'BANCO DE CREDITO DEL PERU' as ComprobanteGrillaDescripcion,
@@ -426,4 +434,6 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
+
+
 
