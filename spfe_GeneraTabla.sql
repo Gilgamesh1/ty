@@ -4,9 +4,10 @@ SET ANSI_NULLS ON
 GO
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER    PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -101,8 +102,8 @@ Declare @Id_Comprobante Int,
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
 
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
-          c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe',
-	  'finanzas@exituno.com.pe' as Receptoremail,   --Cte.MailCP,
+          c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe' as ComprobanteCorreoElectronico,
+	  'finanzas@exituno.com.pe' as Receptoremail,   --Cte.MailCP,finanzas@exituno.com.pe
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
           Case When left(Cte.TipDoc,3)='104'
 	  then '-'
@@ -125,16 +126,8 @@ Declare @Id_Comprobante Int,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,Cte.TelCP,
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
---          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
-          Case When C.ImporteIgv=0 Then
-		 Case When C.TipDoc='NDB' Then
-			0
-		 else
-			0
-		 end
-	  else
-		Round(C.M_Base_Imponible,2)
-	  end as ComprobanteMontoGravado,          
+--        Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
+          Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then 0 else 0 end else Round(C.M_Base_Imponible,2) end as ComprobanteMontoGravado,          
 	  Case When C.TipDoc='NDB' and C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 
 	  Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end
 	  end as ComprobanteMontoInafecto,0 as ComprobanteMontoExonerado,
@@ -152,33 +145,12 @@ Declare @Id_Comprobante Int,
 	  Case When C.m_Trans_Gratuita=0 then 0 else 1 end, -- ComprobanteCheckGratuito
 	  Case When C.m_Trans_Gratuita=0 then NULL else case When C.codmoneda='1' Then 'CERO CON 00/100 DOLARES AMERICANOS' else 'CERO CON 00/100 SOLES' end end, -- ComprobanteMontoLetrasGratuito
           --
---          Case When C.TipDoc='NCR' then 0 else 10.00 end as DetraccionPorcentaje,   -- tasa de detraccisn
           0 as DetraccionPorcentaje,   -- tasa de detraccisn
---          Case When C.TipDoc='NCR' then 0 else Round( Round(Case When C.m_Trans_Gratuita>0 Then 0 else C.M_Base_Imponible+C.ImporteIgv end,2)*0.10,0) end as DetraccionMonto,
           0 as DetraccionMonto,
---          '00003108198',
           '' as NroCuenta,
 	  case When @TipoDoc IN ('NCR','NDB')
-	  then
-		case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD'
-		then
-			''
-		else
-			Case When C.CodDocRef='FAC'
-			Then
-				'01'
-			Else
-				Case When C.CodDocRef='BOL'
-				then
-					'03'
-				Else
-				 	'08'
-				end
-			end
-		end
-	  Else
-		 ''
-	  End as ComprobanteRefTipo,
+	  then case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD' then '' else Case When C.CodDocRef='FAC'
+			Then '01' Else	Case When C.CodDocRef='BOL' then '03' Else '08' end end end Else '' End as ComprobanteRefTipo,
 --	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End  as ComprobanteRefSerie,
 	  case When @TipoDoc IN ('NCR','NDB')
 	  then
@@ -191,19 +163,13 @@ Declare @Id_Comprobante Int,
           Else
 		 ''
 	  End  as ComprobanteRefSerie,
---	  case When @TipoDoc IN ('NCR','NDB') then Right('0000000'+C.NumDocRef,8) end as ComprobanteRefNumero,
-	  case When @TipoDoc IN ('NCR','NDB') then
-	  case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD' then '' else
-	  convert(nvarchar ,cast(C.NumDocRef as int))
-	  end
-	  else '' end as ComprobanteRefNumero,
+	  case When @TipoDoc IN ('NCR','NDB') then case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD' then '' else  convert(nvarchar ,cast(C.NumDocRef as int)) end else '' end as ComprobanteRefNumero,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else C.TipoNCR end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
---          case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
 	  C.FecDoc,C.FecVen,ip.descr_parametro as Instruccion,Case When C.TipDoc='FAC' or C.TipDoc='BOL' Then '10' Else '1' end as FormaPagoCodigo,
           case when C.TipDoc='FAC' or C.TipDoc='BOL' then c.oc else '' end as ComprobanteNroOrdenCompra,
           case when C.TipDoc='FAC' or C.TipDoc='BOL' then c.oc else '' end as texto1,
-'' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
+	  '' as Serieguia,'' as NumeroGuia,  -- Left(Observacion,30) as NumeroGuia,
           Case When @Anticipo='S' Then '04' Else Case When left(Cte.TipDoc,3)='104' then '02' else 
 						 Case When left(Cte.TipDoc,3)='103' then '03' else '01' end end end As TipoOperacion,
           --
@@ -255,7 +221,6 @@ Declare @Id_Comprobante Int,
       and ComprobanteSerie=Case When @TipoDoc='NCR' Then Case When @TDREF='FAC' then 'F' else 'B' End else Left(@Serie,1) end+'0'+Right(@Serie,2)
       And ComprobanteNumero=@Numero
 
-    PRINT N'@Id_Comprobante: '+ cast(@Id_Comprobante as nvarchar(30));  
   --
    Update FE_Comprobantes...FE_Cabecera Set IdFacturacion=@id_Comprobante where idFE=@Id_Comprobante
 
@@ -311,28 +276,16 @@ Declare @Id_Comprobante Int,
    Select @Codref=coddocref,@SerRef=serdocref,@NumRef=numdocref,@IGV=pigv From VNT_DOC 
     Where CodEmp=@Empresa And TipDoc=@TipoDoc And SerDoc=@Serie And NumDoc=@Numero
 
-
-    PRINT N'@Codref: '+ cast(@Codref as nvarchar(30)); 
-    PRINT N'@SerRef: '+ cast(@SerRef as nvarchar(30)); 
-    PRINT N'@NumRef: '+ cast(@NumRef as nvarchar(30)); 
-    PRINT N'@IGV: '+ cast(@IGV as nvarchar(30)); 
-
    select @NCRGratuita=count(*) from vnt_doc v where
     v.tipdoc=@Codref and v.serdoc=@SerRef and v.numdoc=@NumRef and cond_pago='021'
 
-    PRINT N'@NCRGratuita: '+ cast(@NCRGratuita as nvarchar(30)); 
-
-
    --Fecha de Referencia
-PRINT N'Fecha de Referencia -Inicio'; 
    If @TipoDoc='NCR' or @TipoDoc='NDB'
    Begin
 	declare @fechaRef datetime;
 	select @fechaRef=fecdoc from vnt_doc where tipdoc=@Codref and serdoc=@SerRef and numdoc=@NumRef;
-	PRINT N'@fechaRef: '+ cast(@fechaRef as nvarchar(100)); --@fechaRef
 	Update FE_Comprobantes...FE_Cabecera Set ComprobanteRefFechaDoc=@fechaRef Where idFE=@Id_Comprobante;
    End
-PRINT N'Fecha de Referencia -Fin'; 
 
    --Calculo de total Detalles
    select @TotalDetalles=count(*)+1 
@@ -407,9 +360,9 @@ PRINT N'Fecha de Referencia -Fin';
     	PRINT N'@MontoTotal: '+ cast(@MontoTotal as nvarchar(30)); 
 	Update FE_Comprobantes...FE_Cabecera 
         Set 
---          ComprobanteMontoGratuito=0,
-		ComprobanteMontoGravado =0,
---ComprobanteMontoInafecto=0,
+--      ComprobanteMontoGratuito=0,
+	ComprobanteMontoGravado =0,
+--	ComprobanteMontoInafecto=0,
 	ImpuestoIgv=0,
 	ComprobanteMontoEnLetras= case When ComprobanteMoneda='USD' Then 'CERO CON 00/100 DOLARES AMERICANOS' else 'CERO CON 00/100 SOLES' end,
 	ComprobanteImporteTotal=0 Where idFE=@Id_Comprobante 
@@ -429,11 +382,10 @@ PRINT N'Fecha de Referencia -Fin';
     end
 
 
+
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
-
-
 
