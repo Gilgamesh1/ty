@@ -1,0 +1,245 @@
+SET QUOTED_IDENTIFIER ON 
+GO
+SET ANSI_NULLS ON 
+GO
+
+
+
+
+/****** Objeto:  procedimiento almacenado dbo.Sp_InsUpdCabeceraFactura    fecha de la secuencia de comandos: 10/02/2011 11:57:16 a.m. ******/
+ALTER    procedure Sp_InsUpdCabeceraFactura      
+(              
+ @prCodEmp char(2)      
+,@prCodLocal char(2)      
+,@prTipDoc char(3)      
+,@prSerDoc char(3)      
+,@prNumDoc varchar(10) = '' output      
+,@prFecDoc varchar(20)      
+,@prFecVen varchar(20)      
+,@prCodCP varchar(12)      
+,@prNom_CP varchar(200)      
+,@prCond_pago char(3)      
+,@prCodMoneda char(1)      
+,@prTipoCambio decimal(18,4)      
+,@prM_Base_imponible decimal(18,2)      
+,@prM_Trans_gratuita decimal(18,2)      
+,@prImporteTotalDscto decimal(18,2)      
+,@prPIGV decimal(18,2)      
+,@prImporteIGV decimal(18,2)      
+,@prCodVen char(5)      
+,@prCodDocRef char(3)      
+,@prSerDocRef char(3)      
+,@prNumDocRef varchar(10)      
+,@prObservacion nvarchar(250)      
+,@prEstado char(3)      
+,@prUsuario char(15)      
+,@prCodDir char(6)  
+,@prOC char(20)  
+--,@prFecha varchar(20)      
+,@prAnulado bit  
+,@prTipoNcr char(2)
+,@prMsg varchar(255) = '' output              
+)              
+as              
+declare @vrNroResul int,  @nLong   Numeric(10,0)  
+declare @vrNroError int, @vrNroFilas int  
+select @vrNroResul = count(1)              
+from vnt_doc  
+where NumDoc = @prNumDoc  
+and SerDoc = @prSerDoc  
+--and CodCP = @prCodCP  
+and TipDoc=@prTipDoc  
+  
+if @prNumDoc = ''            
+begin            
+          
+  SELECT  @prNumDoc=RTRIM(NroDoc)  
+  FROM CTRL_SERIE_USUARIO WHERE SerieDoc=@prSerDoc AND TipoDoc=@prTipDoc AND TipoMov=@prTipDoc   
+  AND codLocal=@prCodLocal  
+    
+    BEGIN        
+        SET @nLong =DATALENGTH(LTRIM(STR(CONVERT(NUMERIC(15,0), RIGHT(@prNumDoc,15))+1)))                    
+        SET @prNumDoc =REPLICATE('0',8 - @nLong)+LTRIM(STR(CONVERT(NUMERIC(15,0),RIGHT(@prNumDoc,15))+ 1))                    
+    END     
+  --print @prNumDoc  
+end  
+  
+              
+if @vrNroResul = 0              
+begin              
+ begin transaction  
+ insert into vnt_doc  
+ (  
+  CodEmp      
+ ,CodLocal      
+ ,TipDoc      
+ ,SerDoc      
+ ,NumDoc      
+ ,FecDoc      
+ ,FecVen      
+ ,CodCP      
+ ,Nom_CP      
+ ,Cond_pago      
+ ,CodMoneda      
+ ,TipoCambio      
+ ,M_Base_imponible      
+ ,M_Trans_gratuita      
+ ,ImporteTotalDscto      
+ ,PIGV      
+ ,ImporteIGV      
+ ,CodVen      
+ ,CodDocRef      
+ ,SerDocRef      
+ ,NumDocRef      
+ ,Observacion      
+ ,Estado      
+ ,Usuario      
+,CodDir  
+,OC  
+ ,Fecha      
+ ,Anulado   
+ ,TipoNCR         
+ )values(              
+  @prCodEmp      
+ ,@prCodLocal      
+ ,@prTipDoc      
+ ,@prSerDoc      
+ ,@prNumDoc      
+ ,case when @prFecDoc='' then null else @prFecDoc end      
+ ,case when @prFecVen='' then null else @prFecVen end      
+ ,@prCodCP      
+ ,@prNom_CP      
+ ,@prCond_pago      
+ ,@prCodMoneda      
+ ,@prTipoCambio      
+ ,@prM_Base_imponible      
+ ,@prM_Trans_gratuita      
+ ,@prImporteTotalDscto      
+ ,@prPIGV      
+ ,@prImporteIGV      
+ ,@prCodVen      
+ ,@prCodDocRef      
+ ,@prSerDocRef      
+ ,@prNumDocRef      
+ ,@prObservacion      
+ ,@prEstado      
+ ,@prUsuario    
+,@prCodDir  
+,@prOC  
+ ,getdate()      
+ ,@prAnulado      
+ ,@prTipoNcr
+ )  
+  
+
+if @prTipDoc='NCR'
+begin
+update vnt_doc 
+set ImporteTotalDscto=@prM_Base_imponible 
+where TipDoc=@prCodDocRef  and SerDoc=@prSerDocRef  and  NumDoc=@prNumDocRef   
+end
+
+begin  
+exec sp_ActualizaCorrelativo @prTipDoc,@prTipDoc,@prSerDoc,@prNumDoc  
+end  
+  
+ select @vrNroFilas = @@ROWCOUNT, @vrNroError = @@ERROR              
+              
+ if @vrNroError = 547              
+ begin              
+  select @prMsg = 'A check constraint violation occurred.'              
+  rollback              
+  return 99              
+ end   
+  
+ if @vrNroError <> 0  
+ begin              
+  select @prMsg = @vrNroError  
+  rollback              
+  return 99              
+ end              
+              
+ if @vrNroError = 0              
+ begin              
+  select @prMsg = ''              
+  commit              
+  return 0              
+ end              
+end              
+              
+if @vrNroResul > 0              
+begin              
+              
+ begin transaction              
+              
+ update vnt_doc set              
+  CodEmp = @prCodEmp      
+ ,CodLocal = @prCodLocal      
+ ,TipDoc = @prTipDoc      
+-- ,FecDoc = case when @prFecDoc = '' then null else @prFecDoc end      
+ ,FecVen = case when @prFecVen = '' then null else @prFecVen end      
+ --,CodCP = @prCodCP      
+ ,Nom_CP = @prNom_CP      
+ ,Cond_pago = @prCond_pago      
+ ,CodMoneda = @prCodMoneda      
+ ,TipoCambio = @prTipoCambio      
+ ,M_Base_imponible = @prM_Base_imponible      
+ ,M_Trans_gratuita = @prM_Trans_gratuita      
+ ,ImporteTotalDscto = @prImporteTotalDscto      
+ ,PIGV = @prPIGV      
+ ,ImporteIGV = @prImporteIGV      
+ ,CodVen = @prCodVen      
+ ,CodDocRef = @prCodDocRef      
+ ,SerDocRef = @prSerDocRef      
+ ,NumDocRef = @prNumDocRef      
+ ,Observacion = @prObservacion      
+ ,Estado = @prEstado      
+ ,Usuario = @prUsuario   
+ ,CodDir=@prCodDir     
+ ,OC=@prOC  
+ ,Fecha = getdate()
+ ,Anulado = @prAnulado      
+ where SerDoc = @prSerDoc  
+ and NumDoc = @prNumDoc  
+ --and CodCP = @prCodCP  
+ and TipDoc=@prTipDoc  
+  
+ if @prTipDoc='NCR'
+ begin
+ update vnt_doc set ImporteTotalDscto=@prM_Base_imponible where TipDoc=@prCodDocRef  and SerDoc=@prSerDocRef  and  NumDoc=@prNumDocRef   
+ end
+    
+ select @prNumDoc = @prNumDoc            
+ select @vrNroFilas = @@ROWCOUNT, @vrNroError = @@ERROR              
+              
+ if @vrNroError = 547              
+ begin              
+  select @prMsg = 'A check constraint violation occurred.'              
+  rollback              
+  return 99              
+ end          
+  
+ if @vrNroError <> 0  
+ begin              
+  select @prMsg = @vrNroError  
+  rollback              
+  return 99              
+ end       
+              
+ if @vrNroError = 0              
+ begin              
+ select @prMsg = ''              
+ commit              
+ return 0              
+ end              
+end
+
+
+
+
+GO
+SET QUOTED_IDENTIFIER OFF 
+GO
+SET ANSI_NULLS ON 
+GO
+
