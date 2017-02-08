@@ -72,7 +72,7 @@
                             text-align: right">
                         <asp:Label ID="Label2" runat="server" Text="Referencia" Width="72px"></asp:Label></td>
                         <td style="width: 339px; direction: ltr; height: 24px; text-align: left">
-                            <asp:TextBox ID="txtSerie" runat="server" Width="120px" onKeyUp="javascript:SoloDigitos(this,'DecNo');" onBlur="javascript:AgregarCeros(this,3);" BorderWidth="1px"></asp:TextBox>
+                            <asp:TextBox ID="txtSerie" runat="server" Width="120px"  onBlur="javascript:AgregarCeros(this,3);" BorderWidth="1px"></asp:TextBox>
                             <asp:TextBox ID="txtNroDoc" runat="server" onKeyUp="javascript:SoloDigitos(this,'DecNo');" onBlur="javascript:AgregarCeros(this,8);" BorderWidth="1px"></asp:TextBox>
                             <asp:Button ID="Button2" runat="server" BorderWidth="1px" Text="..." /></td>
                         <td align="right" style="vertical-align: middle; width: 80px; color: #003399; direction: rtl;
@@ -102,6 +102,11 @@
                             <asp:DropDownList ID="ddlTipo" runat="server" Width="300px" AutoPostBack="True">
                                 <asp:ListItem Value="0">Seleccionar</asp:ListItem>
                                 <asp:ListItem Value="XD">X DEVOLUCION</asp:ListItem>
+                                <asp:ListItem Value="01">Anulación de la operación</asp:ListItem>
+                                <asp:ListItem Value="02">Anulación por error en el RUC</asp:ListItem>
+                                <asp:ListItem Value="03">Corrección por error en la descripción</asp:ListItem>
+                                <asp:ListItem Value="04">Descuento global</asp:ListItem>
+                                <asp:ListItem Value="05">Descuento por ítem</asp:ListItem>
                                 <asp:ListItem Value="XO">X OTROS</asp:ListItem>
                             </asp:DropDownList></td>
                         <td align="right" style="vertical-align: middle; color: #003399; direction: rtl;

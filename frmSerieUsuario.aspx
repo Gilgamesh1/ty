@@ -30,7 +30,7 @@
             <td style="width: 100px; text-align: right">
                 <asp:Label ID="Label4" runat="server" Text="Serie" Width="100px"></asp:Label></td>
             <td style="width: 100px; text-align: left">
-                <asp:TextBox ID="txtSerie" runat="server" BorderWidth="1px" Width="80px" onKeyUp="javascript:SoloDigitos(this,'DecNo');" onBlur="javascript:AgregarCeros(this,3);"></asp:TextBox></td>
+                <asp:TextBox ID="txtSerie" runat="server" BorderWidth="1px" Width="80px" onBlur="javascript:AgregarCeros(this,3);"></asp:TextBox></td>
             <td style="width: 100px">
             </td>
         </tr>
