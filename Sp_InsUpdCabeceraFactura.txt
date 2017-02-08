@@ -6,6 +6,7 @@ GO
 
 
 
+
 /****** Objeto:  procedimiento almacenado dbo.Sp_InsUpdCabeceraFactura    fecha de la secuencia de comandos: 10/02/2011 11:57:16 a.m. ******/
 ALTER    procedure Sp_InsUpdCabeceraFactura      
 (              
@@ -63,10 +64,20 @@ begin
     END     
   --print @prNumDoc  
 end  
+
+/*---referencia ndb --- 21/12/2016 --*/
+
+if  @prTipDoc='NDB' begin
+	set @prCodDocRef = substring(@prOC,1,3)      
+	set @prSerDocRef= substring(@prOC,4,3)   
+	set @prNumDocRef = substring(@prOC,7,10)   
+        end     
   
               
-if @vrNroResul = 0              
-begin              
+if @vrNroResul = 0     
+        
+begin
+	
  begin transaction  
  insert into vnt_doc  
  (  
@@ -233,6 +244,7 @@ begin
  return 0              
  end              
 end
+
 
 
 
