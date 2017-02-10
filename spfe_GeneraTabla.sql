@@ -5,8 +5,6 @@ GO
 
 
 
-
---Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
 ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
@@ -107,28 +105,13 @@ Declare @Id_Comprobante Int,
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe' as ComprobanteCorreoElectronico,
 	  Cte.MailCP as Receptoremail,   --'finanzas@exituno.com.pe'
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
-          Case When left(Cte.TipDoc,3)='104'
-	  then '-'
-	  else
-		case When @TipoDoc='BOL' then
-			 case when (C.M_Base_Imponible+C.m_Trans_Gratuita+C.ImporteIgv)>=700 then
-				rtrim(cte.RucCP)
-			 else
-				case when cte.RucCP='' then--case when isnull(rtrim(cte.RucCP),'')='' then
-					'-'
-				else
-					rtrim(cte.RucCP)
-			 	end
-			 end
-		else
-			rtrim(cte.RucCP)
-		end
-	  end as ReceptorRuc,
+          Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then
+	  case when (C.M_Base_Imponible+C.m_Trans_Gratuita+C.ImporteIgv)>=700 then rtrim(cte.RucCP)
+	  else case when cte.RucCP='' then '-' else rtrim(cte.RucCP) end end else rtrim(cte.RucCP) end end as ReceptorRuc,
 	  C.CodCP as CodigoCliente,C.Nom_CP,
           Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,Cte.TelCP,
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
---        Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then Round(C.M_Trans_Gratuita,2) else 0 end else Round(C.M_Base_Imponible,2) end as ValorGravado,
           Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then 0 else 0 end else Round(C.M_Base_Imponible,2) end as ComprobanteMontoGravado,          
 	  Case When C.TipDoc='NDB' and C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 
 	  Case When C.ImporteIgv=0 Then Round(C.M_Base_Imponible,2) else 0 end
@@ -153,18 +136,8 @@ Declare @Id_Comprobante Int,
 	  case When @TipoDoc IN ('NCR','NDB')
 	  then case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD' then '' else Case When C.CodDocRef='FAC'
 			Then '01' Else	Case When C.CodDocRef='BOL' then '03' Else '08' end end end Else '' End as ComprobanteRefTipo,
---	  case When @TipoDoc IN ('NCR','NDB') then Case When Left(C.SerDocRef,1)='F' Then Left(SerDocRef,1)+'0'+Right(SerDocRef,2) else C.SerDocRef end Else '' End  as ComprobanteRefSerie,
-	  case When @TipoDoc IN ('NCR','NDB')
-	  then
-		case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD'
-		then 
-			''
-		else
-		 upper(Left(SerDocRef,1)+'0'+Right(SerDocRef,2))
-		end
-          Else
-		 ''
-	  End  as ComprobanteRefSerie,
+	  case When @TipoDoc IN ('NCR','NDB') then case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD'
+		then ''	else upper(Left(SerDocRef,1)+'0'+Right(SerDocRef,2)) end Else ''  End  as ComprobanteRefSerie,
 	  case When @TipoDoc IN ('NCR','NDB') then case when upper(substring(Isnull(c.Observacion,''),1,9))='PENALIDAD' then '' else  convert(nvarchar ,cast(C.NumDocRef as int)) end else '' end as ComprobanteRefNumero,
 	  case When @TipoDoc IN ('NCR') then Case When C.TipoNCR='XD' Then '07' else C.TipoNCR end Else case When @TipoDoc IN ('NDB') then case when upper(Isnull(c.Observacion,''))='PENALIDAD' then '03' else '01' end else '' end end as ComprobanteRefCodigoMotivo,
           case When @TipoDoc IN ('NCR','NDB') then Case When Isnull(c.Observacion,'')='' Then 'DESCUENTO' else c.Observacion end else null end as ComprobanteRefSustento,
