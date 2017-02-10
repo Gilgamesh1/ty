@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 07/02/2017 06:42:48 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 10/02/2017 10:06:50 a.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -54,7 +54,7 @@ insert into fe_cabecera (idFE,IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,Empr
   ComercioExteriorMontoCIF,impuestoisc,0,impuestoOtros,
   PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
   PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
-  Estado,MotivoAnulacion,ComprobanteMultiGlosa,'Cuenta de Bancos:',texto1,ComprobanteRefFechaDoc,
+  Estado,MotivoAnulacion,ComprobanteMultiGlosa,texto2,texto1,ComprobanteRefFechaDoc,
   VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,
   ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3,ComprobanteGrillaFlag,
   ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,

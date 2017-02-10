@@ -5,9 +5,10 @@ GO
 
 
 
+
 --Declare @IdCab Int
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER    PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -67,8 +68,9 @@ Declare @Id_Comprobante Int,
       And flgadelanto='1'
 
    -- Cabecera
-   Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
-	EmpresaTelefono,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
+   Insert into FE_Comprobantes...FE_Cabecera(idFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCodDistrito,
+        EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,EmpresaTelefono,EmpresaWeb,EmpresaCorreo,texto2,
+        ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
         Receptoremail,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorRazonSocial,
 	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
         TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
@@ -97,13 +99,13 @@ Declare @Id_Comprobante Int,
         ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
         ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
-	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,
+	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,'ventas@exituno.com.pe' as EmpresaCorreo,case when @TipoDoc='NCR' then '' else 'Cuenta de Bancos:' end as texto2,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
 
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
           c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe' as ComprobanteCorreoElectronico,
-	  'finanzas@exituno.com.pe' as Receptoremail,   --Cte.MailCP,finanzas@exituno.com.pe
+	  Cte.MailCP as Receptoremail,   --'finanzas@exituno.com.pe'
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
           Case When left(Cte.TipDoc,3)='104'
 	  then '-'
