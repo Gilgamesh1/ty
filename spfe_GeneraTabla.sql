@@ -5,8 +5,9 @@ GO
 
 
 
+
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER   PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER    PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -355,6 +356,7 @@ Declare @Id_Comprobante Int,
 	  NroCuenta='00-000-372978'
 	Where idFE=@Id_Comprobante 
     end
+
 
 
 
