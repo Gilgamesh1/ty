@@ -11,8 +11,9 @@ GO
 
 
 
+
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER        PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER         PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -111,6 +112,8 @@ Declare @Id_Comprobante Int,
         ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
         ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3,
 	CorreoTerceroToReceive,CorreoTerceroTemplate,CorreoTerceroSubject,CorreoTerceroEnvio)
+--	CorreoTerceroToReceive1,CorreoTerceroTemplate1,CorreoTerceroSubject1,CorreoTerceroEnvio1,
+--	CorreoTerceroToReceive2,CorreoTerceroTemplate2,CorreoTerceroSubject2,CorreoTerceroEnvio2)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
 	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,'ventas@exituno.com.pe' as EmpresaCorreo,case when @TipoDoc='NCR' then '' else 'Cuenta de Bancos:' end as texto2,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
@@ -194,6 +197,10 @@ Declare @Id_Comprobante Int,
 	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag3,
 	  Cte.emailOtrosFE as CorreoTerceroToReceive,'EST' as CorreoTerceroTemplate,'Comprobante Electrónico' as CorreoTerceroSubject,
 	  case when Isnull(Cte.emailOtrosFE,'')='' then 0 else 1 end as CorreoTerceroEnvio
+--	  Cte.emailOtrosFE_1 as CorreoTerceroToReceive1,'EST' as CorreoTerceroTemplate1,'Comprobante Electrónico' as CorreoTerceroSubject1,
+--	  case when Isnull(Cte.emailOtrosFE_1,'')='' then 0 else 1 end as CorreoTerceroEnvio1,
+--	  Cte.emailOtrosFE_2 as CorreoTerceroToReceive2,'EST' as CorreoTerceroTemplate2,'Comprobante Electrónico' as CorreoTerceroSubject2,
+--	  case when Isnull(Cte.emailOtrosFE_2,'')='' then 0 else 1 end as CorreoTerceroEnvio2
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
 
@@ -387,8 +394,10 @@ Declare @Id_Comprobante Int,
      Where idFE=@Id_Comprobante 
 
 
+
 GO
 SET QUOTED_IDENTIFIER OFF 
 GO
 SET ANSI_NULLS ON 
 GO
+
