@@ -109,8 +109,8 @@ Declare @Id_Comprobante Int,
         ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3,ComprobanteGrillaFlag,
         ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,
         ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
-        ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
---	CorreoTerceroToReceive,CorreoTerceroTemplate,CorreoTerceroSubject,CorreoTerceroEnvio)
+        ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3,
+	CorreoTerceroToReceive,CorreoTerceroTemplate,CorreoTerceroSubject,CorreoTerceroEnvio)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
 	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,'ventas@exituno.com.pe' as EmpresaCorreo,case when @TipoDoc='NCR' then '' else 'Cuenta de Bancos:' end as texto2,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
@@ -191,9 +191,9 @@ Declare @Id_Comprobante Int,
 	  'Dólares' as ComprobanteGrillaValor13,
 	  '164-0100023353' as ComprobanteGrillaValor23,
 	  '011-164-000100023353-14' as ComprobanteGrillaValor33,
-	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag3
---	  Cte.emailOtrosFE as CorreoTerceroToReceive,'EST' as CorreoTerceroTemplate,'Comprobante Electrónico' as CorreoTerceroSubject,
---	  case when Isnull(Cte.emailOtrosFE,'')='' then 0 else 1 end as CorreoTerceroEnvio
+	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag3,
+	  Cte.emailOtrosFE as CorreoTerceroToReceive,'EST' as CorreoTerceroTemplate,'Comprobante Electrónico' as CorreoTerceroSubject,
+	  case when Isnull(Cte.emailOtrosFE,'')='' then 0 else 1 end as CorreoTerceroEnvio
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
 
