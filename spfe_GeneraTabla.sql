@@ -6,8 +6,13 @@ GO
 
 
 
+
+
+
+
+
 --exec spfe_GeneraTabla '01', 'NCR','F01', '00001884','FAC'
-ALTER    PROCEDURE [dbo].[spfe_GeneraTabla]
+ALTER        PROCEDURE [dbo].[spfe_GeneraTabla]
 	@Empresa VarChar(2),
 	@TipoDoc Varchar(3),
         @Serie   Varchar(3),
@@ -27,7 +32,15 @@ Declare @Id_Comprobante Int,
 	@Codref		varchar(3),
 	@SerRef		varchar(4),
 	@NumRef		varchar(10),
-        @PrepagoFecha	Datetime
+        @PrepagoFecha	Datetime,
+	@codCp		varchar(6),
+	@codDir		varchar(3),
+	@direccion	varchar(255),
+	@ubigeo		varchar(12),
+	@distrito       varchar(200),
+	@provincia      varchar(200),
+	@departamento   varchar(200),
+	@pais		varchar(2)
 --BEGIN TRANSACTION
 
 
@@ -71,7 +84,7 @@ Declare @Id_Comprobante Int,
         EmpresaCalle,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,EmpresaTelefono,EmpresaWeb,EmpresaCorreo,texto2,
         ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,ComprobanteCorreoElectronico,
         Receptoremail,ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ReceptorRazonSocial,
-	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorTelefono,
+	ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,ReceptorCodPais,ReceptorTelefono,
         TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
         ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,
         ComprobanteMontoGratuito,
@@ -97,20 +110,21 @@ Declare @Id_Comprobante Int,
         ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,
         ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
         ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
+--	CorreoTerceroToReceive,CorreoTerceroTemplate,CorreoTerceroSubject,CorreoTerceroEnvio)
    Select Null,'6','20153270814','EXITUNO SA','150121' As Ubigeo,'AV. MANUEL CIPRIANO DULANTO NRO. 211','PUEBLO LIBRE','LIMA','LIMA',
 	  '(511)2611930' AS Telefono,'http://www.exituno.com.pe' as EmpresaWeb,'ventas@exituno.com.pe' as EmpresaCorreo,case when @TipoDoc='NCR' then '' else 'Cuenta de Bancos:' end as texto2,
           Case When C.TipDoc='FAC' Then '01' Else Case When C.TipDoc='BOL' Then '03' Else 
                Case When C.TipDoc='NCR' Then '07' Else '08' End End End,
 
           Case When C.TipDoc='NCR' Then Case When C.CodDocRef='FAC' then 'F' else 'B' End else Left(c.SerDoc,1) end+'0'+Right(c.SerDoc,2),
-          c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,'finanzas@exituno.com.pe' as ComprobanteCorreoElectronico,
+          c.NumDoc,Case When C.codmoneda='1' Then 'USD' else 'PEN' End,Cte.MailCP as ComprobanteCorreoElectronico,--'finanzas@exituno.com.pe' as ComprobanteCorreoElectronico,
 	  Cte.MailCP as Receptoremail,   --'finanzas@exituno.com.pe'
           Case When left(Cte.TipDoc,3)='104' then '0' else Case When Cte.TipDoc='101' Then '6' else Case When Cte.TipDoc='102' Then '1' else '0' end  end end as TipoDocumento,
           Case When left(Cte.TipDoc,3)='104' then '-' else case When @TipoDoc='BOL' then
 	  case when (C.M_Base_Imponible+C.m_Trans_Gratuita+C.ImporteIgv)>=700 then rtrim(cte.RucCP)
 	  else case when cte.RucCP='' then '-' else rtrim(cte.RucCP) end end else rtrim(cte.RucCP) end end as ReceptorRuc,
 	  C.CodCP as CodigoCliente,C.Nom_CP,
-          Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,'' As Ubicacion,'' as Distrito,'' as Provincia,'' as Departamento,Cte.TelCP,
+          Case When Isnull(Cte.DirCP,'')='' then 'LIMA' else Cte.DirCP end,c.coddir As ReceptorUrbanizacion,'' as Distrito,'' as Provincia,'' as Departamento,'' as ReceptorCodPais,Cte.TelCP,
 	  Case When C.codMoneda=0 then 'PEN' else 'USD' end asTipoCambioMonedaOrigen,
 	  Case When C.codMoneda=0 then 'USD' else 'PEN' end as TipoCambioMonedaDestino,C.TipoCambio,
           Case When C.ImporteIgv=0 Then Case When C.TipDoc='NDB' Then 0 else 0 end else Round(C.M_Base_Imponible,2) end as ComprobanteMontoGravado,          
@@ -178,6 +192,8 @@ Declare @Id_Comprobante Int,
 	  '164-0100023353' as ComprobanteGrillaValor23,
 	  '011-164-000100023353-14' as ComprobanteGrillaValor33,
 	  case when @TipoDoc='NCR' then 0 else 1 end as ComprobanteGrillaFlag3
+--	  Cte.emailOtrosFE as CorreoTerceroToReceive,'EST' as CorreoTerceroTemplate,'Comprobante Electrónico' as CorreoTerceroSubject,
+--	  case when Isnull(Cte.emailOtrosFE,'')='' then 0 else 1 end as CorreoTerceroEnvio
      From VNT_DOC  C lEFT Join IGT_ClienProv Cte on C.CodEmp=Cte.CodEmp And C.CodCP=Cte.CodCP 
 	left join igt_parametro ip on c.cond_pago=ip.cod_parametro
 
@@ -189,7 +205,9 @@ Declare @Id_Comprobante Int,
       And C.NumDoc=@Numero and ip.cod_dominio='00008' 
 			
    -- REasignar el nuevo valor de @Id_Comprobante			   
-   Select @Id_Comprobante=IdFE 
+   Select @Id_Comprobante=IdFE, 
+	  @codCp=ReceptorCodigoCliente,
+	  @codDir=ReceptorUrbanizacion 
      From FE_Comprobantes...FE_Cabecera 
     where EmpresaRUC='20153270814' 
       and ComprobanteTipo=Case When @TipoDoc='FAC' Then '01' Else Case When @TipoDoc='BOL' Then '03' Else 
@@ -284,6 +302,7 @@ Declare @Id_Comprobante Int,
               And i.NumDoc=@Numero
               And Isnull(i.Anulado,0)<>1
               And Isnull(i.Total,0)>0
+
               And i.Item>=d.Item) AS Item,  --     And i.CodArt>=d.CodArt) AS Item, or D.TipDoc='NDB'
 	  D.CodArt,
           Case When D.TipDoc in ('NCR','NDB') Then Left(Isnull(D.DesArt,''),100) else Left(D.DesArt,100) end,
@@ -357,7 +376,15 @@ Declare @Id_Comprobante Int,
 	Where idFE=@Id_Comprobante 
     end
 
-
+   select @ubigeo=codubigeo,@direccion=desdireccion from igt_direcciones where codcp=@codcp and corrdir=@coddir
+   select @pais=codSunat from IGT_PAISES where codpais=substring(@ubigeo,1,3)
+   select @departamento=nomdep from IGT_DEPARTAMENTOS where codpais=substring(@ubigeo,1,3) and coddep=substring(@ubigeo,4,3)
+   select @provincia=nompro from IGT_PROVINCIAS where codpais=substring(@ubigeo,1,3) and coddep=substring(@ubigeo,4,3) and codpro=substring(@ubigeo,7,3)
+   select @distrito=nomdis from IGT_DISTRITOS where codpais=substring(@ubigeo,1,3) and coddep=substring(@ubigeo,4,3) and codpro=substring(@ubigeo,7,3) and coddis=substring(@ubigeo,10,3)
+   
+   Update FE_Comprobantes...FE_Cabecera Set ReceptorDireccion=@direccion,ReceptorUrbanizacion='',ReceptorDistrito=@distrito,
+     ReceptorProvincia=@provincia,ReceptorDepartamento=@departamento,ReceptorCodPais=@pais
+     Where idFE=@Id_Comprobante 
 
 
 GO
@@ -365,4 +392,3 @@ SET QUOTED_IDENTIFIER OFF
 GO
 SET ANSI_NULLS ON 
 GO
-
