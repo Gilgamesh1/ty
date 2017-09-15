@@ -1,0 +1,1067 @@
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForFactura
+*/ Versión		  : 021-201701  
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
+FUNCTION ForFactura
+	Parameters nFactura
+
+nConsolidado=0
+PUBLIC GWPREFIJO,GWEEUU,GWPACKED
+
+IF nConsolidado=1
+	Create curSor Factura0(;
+					cdg_tdoc c(3),;
+					num_docu c(10),;
+					ruc_cli c(15),;
+					des_cli c(240),;
+					cdg_cpag c(3),;
+				  	cdg_mon c(3),;
+				  	num_guia c(10),;
+				  	cdg_tpg c(3),;
+				  	cdg_tmov c(3),;
+				  	num_ped c(8),;
+				  	fec_docu D,;
+				  	fec_vcto D,;
+				  	val_fsub n(10,2),;
+				  	val_fdes n(10,2),;
+				  	val_ffle n(10,2),;
+				  	val_figv n(10,2),;
+				  	val_fint n(10,2),;
+				  	val_ftot n(10,2),;
+				  	obs_fcli M,;
+				  	swt_est c(1),;
+				  	por_tigv n(7,2),;
+				  	por_tdct n(7,2),;
+				  	cdg_vend c(3),;
+				  	num_ocom c(20),;
+				  	cdg_eqv c(20),;
+				  	des_vend c(40),;
+				  	des_cpag c(30),;
+				  	dir_cli c(240),;
+				  	cdg_udis c(3),;
+				  	cdg_prod c(15),;
+				  	importe n(12,2),;
+				  	des_prod c(60),;
+				  	can_dfac n(10,2),;
+				  	pre_dfac n(10,5),;
+				  	dct_dfac n(10,2),;
+				  	dct_fic n(10,2),;
+				  	imp_dfac n(10,2),;
+				  	des_dist c(30),;
+				  	num_fact c(3),;
+				  	obs_doc c(240),;
+				  	abr_umed c(5),;
+				  	tel_cli c(30),;
+				  	tip_cmb n(20,9),;
+				  	imp_isc n(10,2),;
+				  	Linea c(30),;
+				  	dir_cli2 c(60),;
+				  	abr_prod c(30),;
+				  	cdg_tip c(30),;
+				  	des_pais c(40),;
+				  	des_vapor c(40),;
+				  	pue_carg c(40),;
+				  	pue_desc c(40),;
+				  	p_neto n(10,2),;
+				  	p_bruto n(10,2),;
+				  	val_fob n(10,2),;
+				  	swt_igv n(1,0),;
+				  	par_aran c(40),;
+				  	com_exp M,;
+				  	com_aranc M,;
+				  	ref1 c(20),;
+				  	ref2 c(20),;
+				  	ref3 c(20),;
+				  	ref4 c(20),;
+				  	ref5 c(20),;
+				  	reft M,;
+	  			  	imp_area n(10,2),;
+	  			  	Dim1 n(10,2),;
+	  			  	Dim2 n(10,2),;
+	  			  	can_area n(10,2),;
+	  			  	swt_prod n(1,0),;
+	  			  	peso n(12,4),;
+	  			  	cdg_area c(3),;
+	  			  	cdg_chof c(3),;
+	  			  	des_chof c(50),;
+	  			  	ruc_chof c(20),;
+	  			  	dir_chof c(50),;
+	  			  	mar_chof c(20),;
+	  			  	pla_chof c(20),;
+	  			  	cons_chof c(20),;
+	  			  	lic_chof c(20),;
+	  			  	Bal1 c(20),;
+	  			  	Bal2 c(20),;
+	  			  	Bal3 c(20),;
+	  			  	des_cli2 c(60),;
+	  			  	des_prov1 c(30),;
+	  			  	des_depa1 c(30),;
+	  			  	num_sec n(5,0),;
+	  			  	swt_imp n(1,0),;
+	  			  	cdg_usr c(20),;
+	  			  	des_distU c(30),;
+	  			  	des_provU c(30),;
+	  			  	des_deptU c(30);
+					,pre_refBonificacion n(10,5);
+				  	,OPCFA_ref1 c(200);
+				  	,OPCFA_ref2 c(200);
+				  	,OPCFA_ref3 c(200);
+				  	,OPCFA_ref4 c(200);
+				  	,OPCFA_ref5 n(12,2);
+				  	,OPCFA_ref6 n(12,2);				  					  					  					  	
+				  	,OPCFA_ref7 n(12,2);				  					  					  					  	
+				  	,OPCFA_ref8 D;
+				  	,OPCFA_ref9 D;
+				  	,OPCFA_ref10 D;				  	
+	  			  	,refprod1  c(100);
+	  			  	,refprod2  c(100);
+	  			  	,refprod3  c(100);
+	  			  	,refprod4  c(100);
+	  			  	,refprod5  c(100); 			  		  			  		  			  		  			  	
+					,val_fant n(15,2);
+					,val_f1 n(15,2);
+					,val_f2 n(15,2);					
+					,val_fotri n(15,2);
+	  			  	,exo_igv n(1,0);
+					,OPPED_ref1 c(200);
+				  	,OPPED_ref2 c(200);
+				  	,OPPED_ref3 c(200);
+				  	,OPPED_ref4 c(200);
+				  	,OPPED_ref5 n(12,2);
+				  	,OPPED_ref6 n(12,2);				  					  					  					  	
+				  	,OPPED_ref7 n(12,2);				  					  					  					  	
+				  	,OPPED_ref8 D;
+				  	,OPPED_ref9 D;
+				  	,OPPED_ref10 D;			
+  		  	  )
+ELSE
+	Create curSor Factura(;
+					cdg_tdoc c(3),;
+					num_docu c(10),;
+					ruc_cli c(15),;
+					des_cli c(240),;
+					cdg_cpag c(3),;
+				  	cdg_mon c(3),;
+				  	num_guia c(10),;
+				  	cdg_tpg c(3),;
+				  	cdg_tmov c(3),;
+				  	num_ped c(8),;
+				  	fec_docu D,;
+				  	fec_vcto D,;
+				  	val_fsub n(10,2),;
+				  	val_fdes n(10,2),;
+				  	val_ffle n(10,2),;
+				  	val_figv n(10,2),;
+				  	val_fint n(10,2),;
+				  	val_ftot n(10,2),;
+				  	obs_fcli M,;
+				  	swt_est c(1),;
+				  	por_tigv n(7,2),;
+				  	por_tdct n(7,2),;
+				  	cdg_vend c(3),;
+				  	num_ocom c(10),;
+				  	cdg_eqv c(20),;
+				  	des_vend c(40),;
+				  	des_cpag c(30),;
+				  	dir_cli c(240),;
+				  	cdg_udis c(3),;
+				  	cdg_prod c(15),;
+				  	importe n(12,2),;
+				  	des_prod c(60),;
+				  	can_dfac n(10,2),;
+				  	pre_dfac n(10,5),;
+				  	dct_dfac n(10,2),;
+				  	dct_fic n(10,2),;
+				  	imp_dfac n(10,2),;
+				  	des_dist c(30),;
+				  	num_fact c(3),;
+				  	obs_doc M,;
+				  	abr_umed c(5),;
+				  	tel_cli c(30),;
+				  	tip_cmb n(20,9),;
+				  	imp_isc n(10,2),;
+				  	Linea c(30),;
+				  	dir_cli2 c(60),;
+				  	abr_prod c(30),;
+				  	cdg_tip c(30),;
+				  	des_pais c(40),;
+				  	des_vapor c(40),;
+				  	pue_carg c(40),;
+				  	pue_desc c(40),;
+				  	p_neto n(10,2),;
+				  	p_bruto n(10,2),;
+				  	val_fob n(10,2),;
+				  	swt_igv n(1,0),;
+				  	par_aran c(40),;
+				  	com_exp M,;
+				  	com_aranc M,;
+				  	ref1 c(20),;
+				  	ref2 c(20),;
+				  	ref3 c(20),;
+				  	ref4 c(20),;
+				  	ref5 c(20),;
+				  	reft M,;
+	  			  	imp_area n(10,2),;
+	  			  	Dim1 n(10,2),;
+	  			  	Dim2 n(10,2),;
+	  			  	can_area n(10,2),;
+	  			  	swt_prod n(1,0),;
+	  			  	peso n(12,4),;
+	  			  	cdg_area c(3),;
+	  			  	cdg_chof c(3),;
+	  			  	des_chof c(50),;
+	  			  	ruc_chof c(20),;
+	  			  	dir_chof c(50),;
+	  			  	mar_chof c(20),;
+	  			  	pla_chof c(20),;
+	  			  	cons_chof c(20),;
+	  			  	lic_chof c(20),;
+	  			  	Bal1 c(20),;
+	  			  	Bal2 c(20),;
+	  			  	Bal3 c(20),;
+	  			  	des_cli2 c(60),;
+	  			  	des_prov1 c(30),;
+	  			  	des_depa1 c(30),;
+	  			  	num_sec n(5,0),;
+	  			  	swt_imp n(1,0),;
+	  			  	cdg_usr c(20),;
+	  			  	des_distU c(30),;
+	  			  	des_provU c(30),;
+	  			  	des_deptU c(30);
+					,pre_refBonificacion n(10,5);
+				  	,OPCFA_ref1 c(200);
+				  	,OPCFA_ref2 c(200);
+				  	,OPCFA_ref3 c(200);
+				  	,OPCFA_ref4 c(200);
+				  	,OPCFA_ref5 n(12,2);
+				  	,OPCFA_ref6 n(12,2);				  					  					  					  	
+				  	,OPCFA_ref7 n(12,2);				  					  					  					  	
+				  	,OPCFA_ref8 D;
+				  	,OPCFA_ref9 D;
+				  	,OPCFA_ref10 D;				  	
+	  			  	,refprod1  c(100);
+	  			  	,refprod2  c(100);
+	  			  	,refprod3  c(100);
+	  			  	,refprod4  c(100);
+	  			  	,refprod5  c(100); 			  		  			  		  			  		  			  	
+					,val_fant n(15,2);
+					,val_f1 n(15,2);
+					,val_f2 n(15,2);					
+					,val_fotri n(15,2);
+	  			  	,exo_igv n(1,0);
+					,OPPED_ref1 c(200);
+				  	,OPPED_ref2 c(200);
+				  	,OPPED_ref3 c(200);
+				  	,OPPED_ref4 c(200);
+				  	,OPPED_ref5 n(12,2);
+				  	,OPPED_ref6 n(12,2);				  					  					  					  	
+				  	,OPPED_ref7 n(12,2);				  					  					  					  	
+				  	,OPPED_ref8 D;
+				  	,OPPED_ref9 D;
+				  	,OPPED_ref10 D;			
+  		  	  )
+ENDIF
+
+			  
+				  
+	stm = "SELECT M_doccli.*, M_pedido.cdg_vend, M_pedido.num_ocom, M_vended.des_vend, "
+	stm = stm + "Conpag.des_item AS des_cpag, M_client.dir_cli, M_client.cdg_udis, M_client.tel_cli,"
+	stm = stm + "D_doccli.cdg_prod "
+*--BONIFICACION
+	stm = stm + ", CASE WHEN COALESCE(BONI.NUM_PED,'')='' THEN M_produc.des_prod ELSE M_produc.des_prod||' Transferencia a título gratuito.' END des_prod "
+	stm = stm + ", COALESCE(boni.pre_pprd,0.00) pre_refBonificacion "
+*--BONIFICACION
+	stm = stm + ", D_doccli.can_dfac, M_produc.abr_prod,"
+	
+	stm = stm + "m_client.des_cli as Nombre,"
+	stm = stm + "D_doccli.pre_dfac, D_doccli.dct_dfac, D_doccli.dct_fic, m_produc.swt_igv as swt_prod,"
+	stm = stm + "D_doccli.imp_dfac, coalesce(Ubidis.des_item,'') AS des_dist, m_produc.cdg_eqv, m_produc.peso, "
+	stm = stm + "T_doccli.num_ser AS num_fact,d_doccli.obs_doc,Umed.abr_item as abr_umed,"
+	stm = stm + "cLinea.des_item as Linea,d_doccli.num_sec,m_client.swt_imp,m_doccli.swt_sal "
+
+	stm = stm + ",coalesce(m_ubigeo.distrito,'') des_distU "
+	stm = stm + ",coalesce(m_ubigeo.departamento,'') des_deptU  "
+	stm = stm + ",coalesce(m_ubigeo.provincia,'') des_provU  "		
+	stm = stm + " ,M_OPCFA.ref1 opcfa_ref1 "
+	stm = stm + " ,M_OPCFA.ref2 opcfa_ref2 "
+	stm = stm + " ,M_OPCFA.ref3 opcfa_ref3 "
+	stm = stm + " ,M_OPCFA.ref4 opcfa_ref4 "
+	stm = stm + " ,M_OPCFA.ref5 opcfa_ref5 "
+	stm = stm + " ,M_OPCFA.ref6 opcfa_ref6 "
+	stm = stm + " ,M_OPCFA.ref7 opcfa_ref7 "						
+	stm = stm + " ,M_OPCFA.ref8 opcfa_ref8 "
+	stm = stm + " ,M_OPCFA.ref9 opcfa_ref9 "
+	stm = stm + " ,M_OPCFA.ref10 opcfa_ref10 "		
+
+	stm = stm + ",coalesce(m_produc.refprod1,'') refprod1  "
+	stm = stm + ",coalesce(m_produc.refprod2,'') refprod2  "
+	stm = stm + ",coalesce(m_produc.refprod3,'') refprod3  "
+	stm = stm + ",coalesce(m_produc.refprod4,'') refprod4  "
+	stm = stm + ",coalesce(m_produc.refprod5,'') refprod5  "
+
+	stm = stm + ",coalesce(d_client.des_cli,'') des_cli2 "
+	stm = stm + ",coalesce(d_client.dir_cli,'') dir_cli2 "
+
+	stm = stm + ",coalesce(m_guia.ori_area,'') cdg_area  "
+	stm = stm + ",coalesce(m_chofer.cdg_chof,'') cdg_chof  "
+	stm = stm + ",coalesce(m_chofer.des_chof,'') des_chof  "
+	stm = stm + ",coalesce(m_chofer.ruc_chof,'') ruc_chof  "
+	stm = stm + ",coalesce(m_chofer.dir_chof,'') dir_chof  "
+	stm = stm + ",coalesce(m_chofer.mar_chof,'') mar_chof  "
+	stm = stm + ",coalesce(m_chofer.pla_chof,'') pla_chof  "
+	stm = stm + ",coalesce(m_chofer.cons_chof,'') cons_chof "
+	stm = stm + ",coalesce(m_chofer.lic_chof,'') lic_chof  "
+
+	stm = stm + " ,coalesce(M_OPPED.ref1,'') OPPED_ref1"
+	stm = stm + " ,coalesce(M_OPPED.ref2,'') OPPED_ref2"
+	stm = stm + " ,coalesce(M_OPPED.ref3,'') OPPED_ref3"
+	stm = stm + " ,coalesce(M_OPPED.ref4,'') OPPED_ref4"
+	stm = stm + " ,coalesce(M_OPPED.ref5,0.00) OPPED_ref5"
+	stm = stm + " ,coalesce(M_OPPED.ref6,0.00) OPPED_ref6"
+	stm = stm + " ,coalesce(M_OPPED.ref7,0.00) OPPED_ref7"					
+	stm = stm + " ,M_OPPED.ref8 OPPED_ref8 "
+	stm = stm + " ,M_OPPED.ref9 OPPED_ref9 "
+	stm = stm + " ,M_OPPED.ref10 OPPED_ref10 "	
+	
+	stm = stm + " FROM m_doccli "
+	stm = stm + "inner join	d_doccli on M_doccli.num_docu = D_doccli.num_docu AND M_doccli.CDG_TDOC = D_doccli.CDG_TDOC "
+	stm = stm + "left join	m_pedido on M_doccli.num_ped = M_pedido.num_ped "
+	stm = stm + "left join	m_client on M_doccli.ruc_cli = M_client.ruc_cli "
+	stm = stm + "left join	(select * from d_tablas where cdg_tab='DST' ) Ubidis on Ubidis.num_item = M_client.cdg_udis "
+	stm = stm + "left join	m_vended on M_pedido.cdg_vend = M_vended.cdg_vend "
+	stm = stm + "left join	m_produc on M_produc.cdg_prod = D_doccli.cdg_prod "
+	stm = stm + "left join	(select * from t_doccli where cdg_tdoc = '002') T_doccli on T_doccli.num_ser = LEFT(M_doccli.num_docu,3) "
+	stm = stm + "left join	(select * from d_tablas where cdg_tab='CPG' ) Conpag on  Conpag.num_item = M_doccli.cdg_cpag "
+	stm = stm + "left join	(select * from d_tablas where cdg_tab='UNM' ) Umed on M_produc.cdg_umed = Umed.num_item "
+	stm = stm + "left join	(select * from d_tablas where cdg_tab='LIN' ) cLinea on M_produc.cdg_linp = cLinea.num_item "
+	stm = stm + "left join m_ubigeo on m_ubigeo.ubigeo = M_client.ubigeo "
+
+	stm = stm + " left join M_OPCFA on M_doccli.num_docu = M_OPCFA.num_docu and M_doccli.cdg_tdoc = M_OPCFA.cdg_tdoc "
+
+	stm = stm + " left join M_DIRFAC on M_doccli.num_docu = M_DIRFAC.num_docu and M_doccli.cdg_tdoc = M_DIRFAC.cdg_tdoc and M_doccli.ruc_cli = M_DIRFAC.ruc_cli "
+	stm = stm + " left join d_client on d_client.ruc_cli = m_dirfac.ruc_cli and d_client.cdg_dir = m_dirfac.cdg_cli "
+
+	stm = stm + " left join m_guia on M_doccli.cdg_tpg = m_guia.cdg_tpg and M_doccli.num_guia=m_guia.num_guia "
+	stm = stm + " left join m_chofer on m_chofer.cdg_chof = m_guia.cdg_chof "
+	
+	stm = stm + " left join M_BONIFICACION BONI on BONI.NUM_PED=M_doccli.num_ped AND BONI.CDG_PROD=D_DOCCLI.CDG_PROD "
+	stm = stm + " 								   AND BONI.NUM_SEC=d_doccli.num_sec "
+
+	stm = stm + " left join M_OPPED on M_OPPED.NUM_PED = m_doccli.NUM_PED "
+	
+	stm = stm + " WHERE "
+	stm = stm + " M_doccli.cdg_tdoc = '002' "
+	stm = stm + " AND M_doccli.num_docu = '" + nFactura + "' "
+	stm = stm + " ORDER BY d_doccli.num_sec"
+	Rc  = SqlExec(Conec,stm,'Fact')
+	ErrSQLEXEC(Rc,stm,'Formato de factura')
+
+
+	Select Fact
+	Go Top
+
+	m.fec_docu 	= Fact.fec_docu
+	GWPREFIJO	= ''
+	GWPACKED	= ''
+	GWEEUU		= ''
+	
+IF TCCOMERCIAL=1 && tipo de cambio comercial
+	If !Empty(m.fec_docu) Then
+		stm = "SELECT * FROM t_cambio "
+		stm = stm + " WHERE fec_cmb = '"+DTOC(m.fec_docu)+"'"
+		Rc  = SqlExec(Conec,stm,'curCambio')
+		ERRSQLEXEC(RC,STM,PROGRAM())
+		
+		Select curCambio
+		Go Top
+		m.tip_cmb = curCambio.tcv_venta
+	Else
+		m.tip_cmb = 1.00
+	EndIf
+
+ELSE
+	If !Empty(m.fec_docu) Then
+		stm = "SELECT * FROM t_cambio "
+		stm = stm + " WHERE fec_cmb = '"+DTOC(m.fec_docu)+"'"
+		Rc  = SqlExec(Conec,stm,'curCambio')
+		ERRSQLEXEC(RC,STM,PROGRAM())
+		
+		Select curCambio
+		Go Top
+		m.tip_cmb = curCambio.tip_cmb
+	Else
+		m.tip_cmb = 1.00
+	EndIf
+ENDIF
+
+
+	Select Fact
+	Go Top
+	Do While !Eof("Fact")
+		m.cdg_usr  = Fact.cdg_usr
+		m.cdg_tdoc = Fact.cdg_tdoc
+		m.num_docu = Fact.num_docu
+		m.ruc_cli  = SubStr(Fact.ruc_cli,1,11)
+		m.des_cli  = Fact.nombre
+		m.dir_cli  = Fact.dir_cli
+		m.des_cli2 = IIF(EMPTY(Fact.des_cli2),Fact.des_cli,Fact.des_cli2)
+		m.dir_cli2 = IIF(EMPTY(Fact.dir_cli2),Fact.dir_cli,Fact.dir_cli2)
+		m.num_sec  = Fact.num_sec
+		m.swt_imp  = iif(!isnull(fact.swt_imp),fact.swt_imp,0)
+		m.swt_sal  = fact.swt_sal
+
+m.des_distU=Fact.des_distU
+m.des_deptU=Fact.des_deptU
+m.des_provU=Fact.des_provU	
+
+
+
+*!*			stm = " SELECT d_client.des_cli,d_client.dir_cli "
+*!*			stm = stm + " FROM M_DIRFAC,D_CLIENT "
+*!*			stm = stm + " WHERE d_client.ruc_cli = m_dirfac.ruc_cli "
+*!*			stm = stm + " AND m_dirfac.cdg_tdoc = '"+m.cdg_tdoc+"' "
+*!*			stm = stm + " AND m_dirfac.num_docu = '"+m.num_docu+"' "
+*!*			stm = stm + " AND d_client.cdg_dir = m_dirfac.cdg_cli "
+*!*			Rc  = SqlExec(Conec,stm,'curTemp')
+*!*			ErrSQLEXEC(RC,stm,PROGRAM())
+*!*			
+*!*			Select curTemp
+*!*			If Reccount('curTemp') > 0 THEN
+*!*				m.des_cli2 = curTemp.des_cli
+*!*				m.dir_cli2 = curTemp.dir_cli
+*!*			EndIf
+
+		m.tel_cli  = Fact.tel_cli
+		m.cdg_cpag = Fact.cdg_cpag
+		m.cdg_mon  = Fact.cdg_mon
+		m.num_guia = Fact.num_guia
+		m.cdg_tpg  = Fact.cdg_tpg
+		m.cdg_tmov = Fact.cdg_tmov
+		m.num_ped  = Fact.num_ped
+		m.fec_docu = Fact.fec_docu
+		m.fec_vcto = Fact.fec_vcto
+		m.val_fsub = nvl(Fact.val_fsub,0.00)
+		m.val_fdes = nvl(Fact.val_fdes,0.00)
+		m.imp_isc  = nvl(Fact.imp_isc,0.00)
+		m.val_ffle = nvl(Fact.val_ffle,0.00)
+		m.val_figv = nvl(Fact.val_figv,0.00)
+		m.val_fint = nvl(Fact.val_fint,0.00)
+		m.val_ftot = nvl(Fact.val_ftot,0.00)
+		m.obs_fcli = Fact.obs_fcli
+		m.por_tigv = nvl(Fact.por_tigv,0.00)
+		m.por_tdct = nvl(Fact.por_tdct,0.00)
+		m.cdg_vend = NVL(Fact.cdg_vend,'')
+		m.num_ocom = NVL(Fact.num_ocom,'')
+		m.des_vend = NVL(Fact.des_vend,'')
+		m.des_cpag = NVL(Fact.des_cpag,'')
+		m.cdg_udis = NVL(Fact.cdg_udis,'')
+		m.cdg_prod = NVL(Fact.cdg_prod,'')
+		m.cdg_eqv  = NVL(Fact.cdg_eqv,'')
+		m.des_prod = NVL(Fact.des_prod,'')
+		m.abr_prod = NVL(Fact.abr_prod,'')
+		m.can_dfac = nvl(Fact.can_dfac,0.00)
+		m.cantidad = nvl(Fact.can_dfac,0.00)
+		m.pre_dfac = nvl(Fact.pre_dfac,0.00)
+		m.dct_dfac = nvl(Fact.dct_dfac,0.00)
+		m.dct_fic  = nvl(Fact.dct_fic,0.00)
+		m.imp_dfac = nvl(Fact.imp_dfac,0.00)
+		m.des_dist = Fact.des_dist
+		m.num_fact = Fact.num_fact
+IF nConsolidado=1
+		m.obs_doc  = SUBSTR(Fact.obs_doc,1,240)
+ELSE 
+		m.obs_doc  = Fact.obs_doc
+ENDIF 
+		m.Linea    = Fact.Linea
+		m.cantidad = nvl(Fact.can_dfac,0.00)
+		m.swt_igv  = Fact.swt_igv
+		m.swt_prod = Fact.swt_prod
+		m.peso     = Fact.peso
+		m.cdg_tip  = ''
+		m.des_pais = ''
+		m.des_vapor= ''
+		m.pue_carg = ''
+		m.pue_desc = ''
+		m.p_neto   = 0.00
+		m.p_bruto  = 0.00
+		m.val_fob  = 0.00
+		m.par_aran = ''
+		m.com_exp  = ''
+		m.com_aranc= ''
+		m.ref1     = ''
+		m.ref2     = ''
+		m.ref3     = ''
+		m.ref4     = ''
+		m.ref5     = ''
+		m.reft     = ''
+		m.can_area = m.can_dfac
+		m.dim1     = 0.00
+		m.dim2     = 0.00
+		m.imp_area = 0.00
+
+		&& Datos de Almacen
+*!*			m.cdg_area = ''
+*!*			m.cdg_chof = ''
+*!*			m.des_chof = ''
+*!*			m.ruc_chof = ''
+*!*			m.dir_chof = ''
+*!*			m.mar_chof = ''
+*!*			m.pla_chof = ''
+*!*			m.cons_chof= ''
+*!*			m.lic_chof = ''
+
+	
+			m.cdg_area  = Fact.cdg_area  
+			m.cdg_chof  = Fact.cdg_chof
+			m.des_chof  = Fact.des_chof
+			m.ruc_chof  = Fact.ruc_chof
+			m.dir_chof  = Fact.dir_chof
+			m.mar_chof  = Fact.mar_chof
+			m.pla_chof  = Fact.pla_chof
+			m.cons_chof = Fact.cons_chof
+			m.lic_chof  = Fact.lic_chof
+
+m.pre_refBonificacion=Fact.pre_refBonificacion
+
+		&& Datos Adicionales Factura
+m.OPCFA_ref1 = nvl(Fact.opcfa_ref1,'')
+m.OPCFA_ref2 = nvl(Fact.opcfa_ref2,'')
+m.OPCFA_ref3 = nvl(Fact.opcfa_ref3,'')
+m.OPCFA_ref4 = nvl(Fact.opcfa_ref4,'')
+m.OPCFA_ref5 = nvl(Fact.opcfa_ref5, 0.00)
+m.OPCFA_ref6 = nvl(Fact.opcfa_ref6, 0.00)
+m.OPCFA_ref7 = nvl(Fact.opcfa_ref7, 0.00)
+m.OPCFA_ref8 = nvl(Fact.opcfa_ref8,{})
+m.OPCFA_ref9 = nvl(Fact.opcfa_ref9,{})
+m.OPCFA_ref10 = nvl(Fact.opcfa_ref10,{})
+
+m.refprod1=Fact.refprod1  	  			  	
+m.refprod2=Fact.refprod2
+m.refprod3=Fact.refprod3  	  			  	
+m.refprod4=Fact.refprod4  	  			  	
+m.refprod5=Fact.refprod5  
+
+m.val_fant		=nvl(Fact.val_fant,0.00)
+m.val_f1 		=nvl(Fact.val_f1 ,0.00)
+m.val_f2 		=nvl(Fact.val_f2 ,0.00)	
+m.val_fotri 	=nvl(Fact.val_fotri ,0.00)
+m.exo_igv 		=nvl(Fact.exo_igv ,0)
+
+		&& Datos Adicionales Pedido relacionado a la Factura
+m.OPPED_ref1= nvl(Fact.OPPED_ref1 ,'')
+m.OPPED_ref2= nvl(Fact.OPPED_ref2 ,'')
+m.OPPED_ref3= nvl(Fact.OPPED_ref3 ,'')
+m.OPPED_ref4= nvl(Fact.OPPED_ref4 ,'')
+m.OPPED_ref5= nvl(Fact.OPPED_ref5 , 0.00)
+m.OPPED_ref6= nvl(Fact.OPPED_ref6 , 0.00)
+m.OPPED_ref7= nvl(Fact.OPPED_ref7 , 0.00)
+m.OPPED_ref8= nvl(Fact.OPPED_ref8 ,{})
+m.OPPED_ref9= nvl(Fact.OPPED_ref9 ,{})
+m.OPPED_ref10= nvl(Fact.OPPED_ref10 ,{})
+
+
+*!*	**COMENTARIO BONIFICACION
+*!*			stm = "SELECT * FROM M_BONIFICACION WHERE NUM_PED='"+Fact.num_ped+"' AND CDG_PROD='"+Fact.cdg_prod+"'"
+*!*			stm = stm + " AND NUM_SEC="+str(Fact.num_sec,12,0)+" "
+*!*			rc  = SqlExec(conec,stm,'curTempW')
+
+*!*			*MESSAGEBOX(STM)
+
+*!*			ERRSQLEXEC(RC,STM,PROGRAM())
+*!*			
+*!*			Select curTempW
+*!*			Go Top
+*!*			If Reccount('curtempW') > 0 then
+*!*				m.des_prod=m.des_prod+" Transferencia a título gratuito."
+*!*				m.pre_refBonificacion=curTempW.pre_pprd
+*!*			ELSE 
+*!*				m.pre_refBonificacion=0.00
+*!*			EndIf
+*!*	**end coment
+
+*!*			stm = "Select m_chofer.*,m_guia.ori_area "
+*!*			stm = stm + " From m_chofer,m_guia "
+*!*			stm = stm + " Where m_chofer.cdg_chof = m_guia.cdg_chof "
+*!*			stm = stm + " AND m_guia.cdg_tpg = '"+m.cdg_tpg+"' "
+*!*			stm = stm + " AND m_guia.num_guia = '"+m.num_guia+"' "
+*!*			rc  = SqlExec(conec,stm,'curTemp')
+*!*			ERRSQLEXEC(RC,STM,PROGRAM())
+*!*			
+*!*			Select curTemp
+*!*			Go Top
+*!*			If Reccount('curTemp') > 0 THEN
+*!*				m.cdg_area  = curTemp.ori_area
+*!*				m.cdg_chof  = curTemp.cdg_chof
+*!*				m.des_chof  = curTemp.des_chof
+*!*				m.ruc_chof  = curTemp.ruc_chof
+*!*				m.dir_chof  = curTemp.dir_chof
+*!*				m.mar_chof  = curTemp.mar_chof
+*!*				m.pla_chof  = curTemp.pla_chof
+*!*				m.cons_chof = curTemp.cons_chof
+*!*				m.lic_chof  = curTemp.lic_chof
+*!*			EndIf	
+
+
+		stm = "Select can_pprd,dim1,dim2,imp_area "
+		stm = stm + " From d_cotiza "
+		stm = stm + " Where num_ped = '"+m.num_ocom+"' "
+		stm = stm + " AND cdg_prod = '"+m.cdg_prod+"' "
+		rc  = SqlExec(conec,stm,'curTemp')
+
+		
+		If rc = 1 THEN
+			Select curTemp
+			Go Top
+			If Reccount('curTemp') > 0 THEN
+				m.can_area = curTemp.can_pprd
+				m.dim1     = curTemp.dim1
+				m.dim2     = curTemp.dim2
+				m.imp_area = curTemp.imp_area
+			EndIf
+		EndIf
+
+
+		stm = "Select xprov.des_item  as des_prov1, xdepa.des_item  as des_depa1 "
+		stm = stm + " FROM d_tablas xprov,d_tablas xdepa, m_client "
+		stm = stm + " WHERE m_client.ruc_cli='"+m.ruc_cli+"' "
+		stm = stm + " AND xprov.cdg_tab='LUG' "
+		stm = stm + " AND xdepa.cdg_tab='ZON' "
+		stm = stm + " AND xprov.num_item=m_client.ref1 "
+		stm = stm + " AND xdepa.num_item=m_client.ref2 "
+		RC  = SqlExec(Conec,stm,'curProv')
+		ERRSQLEXEC(RC,STM,PROGRAM())
+
+		SELECT curProv
+		Go Top
+		If Reccount('curProv') > 0 THEN
+			m.des_prov1 = curProv.des_prov1
+			m.des_depa1 = curProv.des_depa1
+		Else
+			m.des_prov1 = ''
+			m.des_depa1 = ''
+		EndIf
+
+
+		stm = " Select importe From m_redondeo "
+		stm = stm + " Where cdg_Tdoc = '"+m.cdg_tdoc+"' "
+		stm = stm + " and num_docu = '"+m.num_docu+"' "
+		rc  = SqlExec(conec,stm,'curTemp')
+		ERRSQLEXEC(RC,STM,PROGRAM())
+		
+		Select curTemp
+		Go Top
+		m.importe = 0.00
+		If Reccount('curTemp') > 0 THEN
+			m.importe = curTemp.importe
+		EndIf
+
+		stm = "Select * From m_exportacion "
+		stm = stm + " Where cdg_tdoc = '"+m.cdg_tdoc+"' "
+		stm = stm + " and num_docu = '"+m.num_docu+"' "
+		Rc  = SqlExec(Conec,stm,'curTemp')
+		ERRSQLEXEC(RC,STM,PROGRAM())
+		
+		Select curTemp
+		Go Top
+		If Reccount('curTemp') > 0 THEN
+
+			m.cdg_tip   = curTemp.cdg_tip
+			m.des_pais  = curTemp.des_pais
+			m.des_vapor = curTemp.des_vapor
+			m.pue_carg  = curTemp.pue_carg
+			m.pue_desc  = curTemp.pue_desc
+			m.p_neto    = curTemp.p_neto
+			m.p_bruto   = curTemp.p_bruto
+			m.val_fob   = curTemp.val_fob
+			m.par_aran  = curTemp.par_aran
+			m.com_exp   = curTemp.com_exp
+			m.com_aranc = curTemp.com_aranc
+
+		EndIf
+
+
+		I  = AT('@',Fact.obs_doc,1)
+		II = AT('@',Fact.obs_doc,2)
+
+		IF II = 0 THEN
+			m.can_dfac = Fact.can_dfac
+
+			IF I = 0 THEN
+				m.abr_umed = Fact.abr_umed
+			ELSE
+				m.abr_umed = SUBSTR(Fact.obs_doc,I+1,5)
+			ENDIF
+			
+			IF I = 0 THEN
+				m.obs_doc  = Fact.obs_doc
+			ELSE
+				m.obs_doc  = SUBSTR(Fact.obs_doc,1,I-1)
+			ENDIF
+
+		ELSE
+			IF I = 0 THEN
+				m.can_dfac = Fact.can_dfac
+			ELSE
+				m.can_dfac = VAL(SUBSTR(Fact.obs_doc,I+1,II-I-1))
+				IF m.can_dfac <> m.cantidad
+					m.pre_dfac = ROUND(m.imp_dfac / m.can_dfac,5)
+				ENDIF
+					
+			ENDIF
+			
+			IF I = 0 THEN
+				m.abr_umed = Fact.abr_umed
+			ELSE
+				m.abr_umed = SUBSTR(Fact.obs_doc,II+1,5)
+			ENDIF
+			
+			IF I = 0 THEN
+				m.obs_doc  = Fact.obs_doc
+			ELSE
+				m.obs_doc  = SUBSTR(Fact.obs_doc,1,I-1)
+			ENDIF
+		ENDIF
+
+
+		m.factor   = Round(m.can_dfac / m.cantidad,2)
+
+
+		*----------DETERMINA SI IMPRIME DETALLES------------*
+		If !IsNull(JFac) .and. JFac <> 0 THEN
+			stm = "SELECT d_guidt.* "
+			stm = stm + " FROM D_GUIDT,M_GUIA "
+			stm = stm + " WHERE d_guidt.cdg_tpg = m_guia.cdg_tpg "
+			stm = stm + " AND m_guia.num_guia = d_guidt.num_guia "
+			stm = stm + " AND m_guia.cdg_tdoc = '"+m.cdg_tdoc+"' "
+			stm = stm + " AND m_guia.num_docu = '"+m.num_docu+"' "
+			stm = stm + " AND d_guidt.cdg_prod = '"+m.cdg_prod+"' "
+			stm = stm + " AND d_guidt.num_sec="+str(m.num_sec,5,0)
+			RC = SQLEXEC(CONEC,stm,'curTemp')
+			ErrSQLEXEC(RC,stm,PROGRAM())
+			
+			Select curTemp
+			Go Top
+			
+			*-------------CUANDO SEA COLUMNADO-----------*
+			If JFac = 8 THEN
+				Select curTemp
+				If Reccount('curTemp') > 0 THEN
+					Go Top
+					Do While !Eof("curTemp")
+						
+						m.can_dfac = IIf(Isnull(curTemp.mas2) or Empty(Val(curTemp.mas2)),curTemp.can_dgui,Val(curTemp.mas2))
+						m.imp_dfac = ROUND(( m.can_dfac * m.pre_dfac) * (1 - (round(m.dct_dfac/100,10))) * (1 - (round(m.dct_fic/100,10))),2)
+					    
+						m.ref1     = curTemp.ref1
+						m.ref2     = curTemp.ref2
+						m.ref3     = curTemp.ref3
+						m.ref4     = curTemp.ref4
+						m.ref5     = curTemp.ref5
+					
+					IF nConsolidado=1								
+						Select Factura0
+						Insert Into Factura0 From MemVar
+					ELSE
+						Select Factura
+						Insert Into Factura From MemVar
+					ENDIF
+						
+						Select curTemp
+						Skip In curTemp
+					EndDo
+				Else
+
+					IF nConsolidado=1								
+						Select Factura0
+						Insert Into Factura0 From MemVar
+					ELSE
+						Select Factura
+						Insert Into Factura From MemVar
+					ENDIF
+				
+				EndIf
+						
+			Else
+				*---------------CUANDO SEA AGRUPADO--------------*
+
+				Select curTemp
+				Go Top
+				m.reft = ""
+				Do While !Eof("curTemp")
+					
+					m.cant = AllTrim(Str(Round(curTemp.can_dgui * m.factor,2),12,2))
+					m.cant = IIf(Isnull(curTemp.mas2) or Empty(Val(curTemp.mas2)),m.cant,AllTrim(curTemp.mas2))
+					m.reft = m.reft + m.cant + ' / ' + IIf(JFac > 0,IIf(!Empty(curTemp.ref1),AllTrim(curTemp.ref1) ,''),'') + + IIf(JFac > 1,IIf(!Empty(curTemp.ref2),' / '+AllTrim(curTemp.ref2) ,''),'') +  IIf(JFac > 2,IIf(!Empty(curTemp.ref3),' / ' + AllTrim(curTemp.ref3) ,''),'') + + IIf(JFac > 3,IIf(!Empty(curTemp.ref4),' / ' + AllTrim(curTemp.ref4),''),'') + + IIf(JFac > 4,IIf(!Empty(curTemp.ref5),' / ' + AllTrim(curTemp.ref5) ,''),'')  + ' , '
+
+				
+					Select curTemp
+					Skip in curTemp
+				EndDo
+							
+					IF nConsolidado=1								
+						Select Factura0
+						Insert Into Factura0 From MemVar
+					ELSE
+						Select Factura
+						Insert Into Factura From MemVar
+					ENDIF
+				
+			EndIf
+
+		Else
+			*------------NO IMPRIME DETALLE-----------*			
+					IF nConsolidado=1								
+						Select Factura0
+						Insert Into Factura0 From MemVar
+					ELSE
+						Select Factura
+						Insert Into Factura From MemVar
+					ENDIF
+		EndIf
+
+	
+		Select Fact
+		Skip In Fact
+	EndDo
+*--------especial--------------
+IF nConsolidado=1
+
+SELECT cdg_tdoc;
+,num_docu;
+,ruc_cli;
+,des_cli;
+,cdg_cpag;
+,cdg_mon;
+,num_guia;
+,cdg_tpg;
+,cdg_tmov;
+,num_ped;
+,fec_docu;
+,fec_vcto;
+,val_fsub;
+,val_fdes;
+,val_ffle;
+,val_figv;
+,val_fint;
+,val_ftot;
+,swt_est;
+,por_tigv;
+,por_tdct;
+,cdg_vend;
+,num_ocom;
+,cdg_eqv;
+,des_vend;
+,des_cpag;
+,dir_cli;
+,cdg_udis;
+,cdg_prod;
+,importe;
+,des_prod;
+,obs_doc;
+,SUM(can_dfac) can_dfac;
+,MAX(pre_dfac) pre_dfac;
+,MAX(dct_dfac) dct_dfac;
+,MAX(dct_fic) dct_fic;
+,SUM(imp_dfac) imp_dfac;
+,des_dist;
+,num_fact;
+,abr_umed;
+,tel_cli;
+,tip_cmb;
+,imp_isc;
+,Linea;
+,dir_cli2;
+,abr_prod;
+,cdg_tip;
+,des_pais;
+,des_vapor;
+,pue_carg;
+,pue_desc;
+,p_neto;
+,p_bruto;
+,val_fob;
+,swt_igv;
+,par_aran;
+,ref1;
+,ref2;
+,ref3;
+,ref4;
+,ref5;
+,imp_area;
+,Dim1;
+,Dim2;
+,SUM(can_area) can_area;
+,swt_prod;
+,peso;
+,cdg_area;
+,cdg_chof;
+,des_chof;
+,ruc_chof;
+,dir_chof;
+,mar_chof;
+,pla_chof;
+,cons_chof;
+,lic_chof;
+,Bal1;
+,Bal2;
+,Bal3;
+,des_cli2;
+,des_prov1;
+,des_depa1;
+,MIN(num_sec) num_sec;
+,swt_imp;
+,cdg_usr;
+,des_distU;
+,des_provU;
+,des_deptU;
+,pre_refBonificacion;
+,OPCFA_ref1;
+,OPCFA_ref2;
+,OPCFA_ref3;
+,OPCFA_ref4;
+,OPCFA_ref5;
+,OPCFA_ref6;
+,OPCFA_ref7;
+,OPCFA_ref8;
+,OPCFA_ref9;
+,OPCFA_ref10;
+,refprod1;
+,refprod2;
+,refprod3;
+,refprod4;
+,refprod5;
+,val_fant;
+,val_f1;
+,val_f2;
+,val_fotri;
+,exo_igv;
+from factura0 ;
+GROUP BY cdg_tdoc ;
+,num_docu;
+,ruc_cli;
+,des_cli;
+,cdg_cpag;
+,cdg_mon;
+,num_guia;
+,cdg_tpg;
+,cdg_tmov;
+,num_ped;
+,fec_docu;
+,fec_vcto;
+,val_fsub;
+,val_fdes;
+,val_ffle;
+,val_figv;
+,val_fint;
+,val_ftot;
+,swt_est;
+,por_tigv;
+,por_tdct;
+,cdg_vend;
+,num_ocom;
+,cdg_eqv;
+,des_vend;
+,des_cpag;
+,dir_cli;
+,cdg_udis;
+,cdg_prod;
+,importe;
+,des_prod;
+,obs_doc;
+,des_dist;
+,num_fact;
+,abr_umed;
+,tel_cli;
+,tip_cmb;
+,imp_isc;
+,Linea;
+,dir_cli2;
+,abr_prod;
+,cdg_tip;
+,des_pais;
+,des_vapor;
+,pue_carg;
+,pue_desc;
+,p_neto;
+,p_bruto;
+,val_fob;
+,swt_igv;
+,par_aran;
+,ref1;
+,ref2;
+,ref3;
+,ref4;
+,ref5;
+,imp_area;
+,Dim1;
+,Dim2;
+,swt_prod;
+,peso;
+,cdg_area;
+,cdg_chof;
+,des_chof;
+,ruc_chof;
+,dir_chof;
+,mar_chof;
+,pla_chof;
+,cons_chof;
+,lic_chof;
+,Bal1;
+,Bal2;
+,Bal3;
+,des_cli2;
+,des_prov1;
+,des_depa1;
+,swt_imp;
+,cdg_usr;
+,des_distU;
+,des_provU;
+,des_deptU;
+,pre_refBonificacion;
+,OPCFA_ref1;
+,OPCFA_ref2;
+,OPCFA_ref3;
+,OPCFA_ref4;
+,OPCFA_ref5;
+,OPCFA_ref6;
+,OPCFA_ref7;
+,OPCFA_ref8;
+,OPCFA_ref9;
+,OPCFA_ref10;
+,refprod1;
+,refprod2;
+,refprod3;
+,refprod4;
+,refprod5;
+,val_fant;
+,val_f1;
+,val_f2;
+,val_fotri;
+,exo_igv;
+ INTO CURSOR Factura
+ 
+ENDIF
+*--------especial-------------- 
+	
+	*---------IMPRIMIR FACTURA---------*
+	Select Factura
+	Go Top
+
+	If Reccount('Factura')>0 Then
+
+		If M.SWT_SAL='E' then
+			Do Form frm_emit.scx With "rep_facexp.frx", ""
+		Else
+			Do Form frm_emit.scx With "rep_fact.frx", ""
+		EndIf
+
+	Else
+		ProcFrmStop('Faltan datos para el Documento')
+	EndIf
+	
+	Use In Factura
+RETURN
