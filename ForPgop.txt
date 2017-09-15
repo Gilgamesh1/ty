@@ -1,0 +1,346 @@
+*/---------------------------------------------------------------/*
+*/ Nombre           : ForPgop
+*/ Version     		: 026-20170516
+*/ Descripción      : Voucher de Pago a Proveedores
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
+FUNCTION ForPgop
+	PARAMETERS nNumCor,nCheck1,cBanco,cCuenta
+
+
+stm = "	select  		 "
+stm = stm + "	A.ano	,	 "
+stm = stm + "	A.mes	,	 "
+stm = stm + "	BCO.des_item des_bco	,	 "
+stm = stm + "	A.num_cta	,	 "
+stm = stm + "	A.num_cor	,	 "
+stm = stm + "	MON.des_item des_mon	,	 "
+stm = stm + "	FPA.des_item des_fpag	,	 "
+stm = stm + "	a.fec_docu	,	 "
+stm = stm + "	a.num_docu	,	 "
+stm = stm + "	a.con_docu	,	 "
+stm = stm + "	a.imp_debe	,	 "
+stm = stm + "	a.imp_haber	,	 "
+stm = stm + "	a.swt_est	,	 "
+stm = stm + "	a.swt_atn	,	 "
+stm = stm + "	a.tip_cmb	,	 "
+stm = stm + "	b.num_itm	,	 "
+stm = stm + "	TDC.des_item  des_tdoc	,	 "
+stm = stm + "	b.num_docu num_docuD	,	 "
+stm = stm + "	mlb.des_item des_tmov	,	 "
+stm = stm + "	a.des_prv,		 "
+stm = stm + "	b.imp_debe imp_debeD	,	 "
+stm = stm + "	b.imp_haber imp_haberD	,	 "
+stm = stm + "	b.cdg_tana	,	 "
+stm = stm + "	b.cdg_anal	,	 "
+stm = stm + "	MON.des_ITEM des_monD	,	 "
+stm = stm + "	a.cdg_mon		 "
+*--0017
+stm = stm + "	,p.cdg_mon mondocu		 "
+stm = stm + "	,p.val_ftot imp_docu	 "
+stm = stm + "	,(b.imp_debe+b.imp_haber) imp_pago	 "
+stm = stm + "	,p.fec_vcto vct_docu	 "
+stm = stm + "	,b.tip_cmb cambio "
+stm = stm + "	,TDC.tip_item AS signo "
+*--0017
+
+stm = stm + "	from m_libbco a 		 "
+stm = stm + "	left join d_libbco b on a.cdg_bco=b.cdg_bco and a.num_cta=b.num_cta and a.num_cor=b.num_cor		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='BCO' ) BCO on a.cdg_bco=BCO.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='FPA' ) FPA on a.cdg_fpag=fpa.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='TDC' ) TDC on B.cdg_tdoc=TDC.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='MLB' ) MLB on B.cdg_tmov=MLB.num_item	AND MLB.ANO_PLAN=SUBSTR(b.num_cor,1,4) "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='MON' ) MON on B.mon_ori=MON.num_item		 "
+stm = stm + "	left join M_DOCPRV P on p.cdg_tdoc=B.cdg_tdoc and p.num_docu=b.num_docu and p.ruc_prv=rtrim(SUBSTR(b.cdg_anal,2)) "
+stm = stm + "	where  "
+stm = stm + " A.cdg_bco = '"+cBanco+"' AND "
+stm = stm + " A.num_cta = '"+cCuenta+"' AND "
+stm = stm + " A.num_cor = '"+nNumCor+"' "
+stm = stm + " ORDER BY B.num_itm "
+
+*MESSAGEBOX(STM)
+RC  = SQLEXEC(CONEC,stm,'curReplbc')
+ErrSQLEXEC(RC,stm,'frm_lbbco / cmdPrint / Click')
+
+
+*!*	 
+
+   IF nCheck1=0 then
+	 SELECT curReplbc
+	 GO TOP
+     IF RECCOUNT() > 0 THEN	 
+	 	 DO FORM frm_emit.scx WITH "rep_vlbc.frx", ""
+	 ELSE
+
+*!*				CREATE CURSOR res_pgop (;
+*!*								for_pag c(40),;
+*!*								tip_docu c(8),;
+*!*								num_docu c(40),;
+*!*							  	num_cta c(50),;
+*!*							  	num_cheq c(50),;
+*!*							  	imp_pago n(10,2),;
+*!*							  	des_docu c(50),;
+*!*							  	fec_pago d,;
+*!*							  	signo c(1),;
+*!*							  	ruc_prv c(15),;
+*!*							  	des_prv c(50),;
+*!*							  	cdg_fpag c(3),;
+*!*							  	cdg_mon c(3),;
+*!*							  	cdg_tdoc c(3),;
+*!*							  	cdg_bco c(3),;
+*!*							  	moneda c(30),;
+*!*							  	num_cor c(20),;
+*!*							  	mondocu c(3),;
+*!*							  	imp_docu n(10,2),;
+*!*							  	cambio n(14,9),;
+*!*							  	total n(10,2),;
+*!*							  	vct_docu D,;
+*!*							  	con_prv c(40),;
+*!*							  	reg_lbco c(20))	
+
+
+
+*!*				***********************CREA CURSOR PARA VOUCHER*****************
+*!*				stm = "SELECT des_item FROM d_tablas "
+*!*				stm = stm + " WHERE cdg_tab = 'BCO' "
+*!*				stm = stm + " AND num_item = '"+THISFORM.CdgBco+"'"
+*!*				RC = SQLEXEC(CONEC,stm,'banco')
+*!*				ErrSQLEXEC(RC,stm,'Frm_pgop / emite_voucher')
+
+
+			stm = "SELECT Forpag.des_item AS for_pag, Tipdoc.abr_item AS tip_docu, "
+			stm = stm + "M_pagprv.num_docu, M_pagprv.num_cta, M_pagprv.num_cheq, "
+			stm = stm + "M_pagprv.imp_pago, Tipdoc.des_item AS des_docu, M_pagprv.fec_pago, "
+			stm = stm + "Tipdoc.tip_item AS signo, M_pagprv.ruc_prv, M_provee.des_prv, "
+			stm = stm + "M_pagprv.cdg_fpag, M_pagprv.cdg_mon, M_pagprv.cdg_tdoc, M_pagprv.cdg_bco, "
+			stm = stm + "Monedas.des_item AS moneda, M_pagprv.num_cor, "
+			stm = stm + "M_cteprv.cdg_mon AS mondocu, M_cteprv.imp_docu, m_cteprv.vct_docu "
+			stm = stm + ",m_pagprv.num_cor reg_lbco "
+			stm = stm + ",TOT.total "
+			stm = stm + ",'"+Concept+"' con_prv   "
+			stm = stm + ",M_pagprv.tip_cmb cambio  "
+			stm = stm + ",BCO.des_item banco  "
+			stm = stm + " FROM m_pagprv "
+			stm = stm + " LEFT JOIN m_provee ON M_provee.ruc_prv = M_pagprv.ruc_prv "
+			stm = stm + " LEFT JOIN (SELECT * FROM d_tablas WHERE CDG_TAB='FPA') Forpag ON M_pagprv.cdg_fpag = Forpag.num_item "
+			stm = stm + " LEFT JOIN (SELECT * FROM d_tablas WHERE CDG_TAB='TDC') Tipdoc ON M_pagprv.cdg_tdoc = Tipdoc.num_item "  
+			stm = stm + " LEFT JOIN (SELECT * FROM d_tablas WHERE CDG_TAB='MON') Monedas ON M_pagprv.cdg_mon = Monedas.num_item "
+			stm = stm + " LEFT JOIN m_cteprv ON M_cteprv.ruc_prv = M_pagprv.ruc_prv "
+			stm = stm + "					AND M_cteprv.cdg_tdoc = M_pagprv.cdg_tdoc "
+			stm = stm + "					AND M_cteprv.num_docu = M_pagprv.num_docu "
+			stm = stm + " LEFT JOIN (SELECT * FROM d_tablas WHERE CDG_TAB='BCO') BCO ON M_pagprv.cdg_bco= BCO.num_item "
+
+			stm = stm + " LEFT JOIN ( "
+			stm = stm + " select A.num_cor,sum(case when tipdoc.tip_item='-' then A.imp_pago*-1 else A.imp_pago end) total  "
+			stm = stm + " from M_PAGPRV A "
+			stm = stm + " LEFT JOIN (SELECT * FROM d_tablas WHERE CDG_TAB='TDC') Tipdoc ON A.cdg_tdoc = Tipdoc.num_item "
+			stm = stm + " where num_cor='"+ALLTRIM(nNumCor)+"' "
+			stm = stm + " group by A.num_cor "
+			stm = stm + " ) TOT ON m_pagprv.num_cor=TOT.num_cor "
+
+			stm = stm + " WHERE "
+			stm = stm + " m_pagprv.num_cor  = '"+ALLTRIM(nNumCor)+"' " 
+*			stm = stm + " AND M_pagprv.fec_pago >= '"+DTOC(dDesde)+"' "
+*			stm = stm + " AND M_pagprv.fec_pago <= '"+DTOC(dHasta)+"' "
+			stm = stm + " ORDER BY M_provee.des_prv, Tipdoc.abr_item,"
+			stm = stm + " M_pagprv.num_docu, M_pagprv.fec_pago"
+			RC = SQLEXEC(CONEC,stm,'res_pgop')
+			ErrSQLEXEC(RC,stm,'Frm_pgop / emite_voucher')
+
+
+			SELECT res_pgop
+			GO TOP
+			*BROWSE
+			IF RECCOUNT('res_pgop') > 0 THEN
+				GO TOP
+				DO FORM frm_emit.scx WITH "rep_pgop.frx", " "		
+			ELSE
+				ProcFrmStop('Los datos registrados en el documento no estan Completos. Verificar')
+			ENDIF
+			
+			
+	 ENDIF
+			********** Basea Datos al cursor Activo ********************
+			*!*	SELECT curNumDocu
+			*!*	GO TOP
+			*!*	BROWSE
+
+			*!*	DO WHILE !EOF("curNumDocu")
+
+			*!*		&& IF !EMPTY(curNumDocu.X)
+			*!*			m.codigo = curNumDocu.cdg_tdoc
+			*!*			m.numero = curNumDocu.num_docu
+			*!*			m.corre  = curNumDocu.num_cor
+*!*						
+*!*						SELECT docum
+*!*						GO TOP
+
+*!*						DO WHILE !EOF("docum")
+*!*							m.for_pag   = docum.for_pag
+*!*							m.tip_docu  = docum.tip_docu
+*!*							m.num_docu  = docum.num_docu
+*!*							m.num_cta   = docum.num_cta
+*!*							m.num_cheq  = docum.num_cheq
+*!*							m.imp_pago  = docum.imp_pago
+*!*							m.des_docu  = docum.des_docu
+*!*							m.fec_pago  = docum.fec_pago
+*!*							m.cdg_fpag  = docum.cdg_fpag
+*!*							m.signo     = docum.signo
+*						m.con_prv   = THISFORM.Concepto
+*!*							m.ruc_prv   = docum.ruc_prv
+*!*							m.des_prv   = docum.des_prv
+*!*							m.cdg_mon   = docum.cdg_mon
+*!*							m.cdg_tdoc  = docum.cdg_tdoc
+*!*							m.cdg_bco   = docum.cdg_bco
+*!*							m.moneda    = docum.moneda
+*!*							m.num_cor   = docum.num_cor
+*!*							m.mondocu   = docum.mondocu
+*!*							m.imp_docu  = docum.imp_docu
+*						m.cambio    = THISFORM.cambio
+*						m.vct_docu  = docum.vct_docu
+*						m.total     = THISFORM.txtImpPago.VALUE + ThisForm.Text2.Value
+*						m.total     = THISFORM.txtImpPago.VALUE && SEGUN MARCO ATUNCAR DE GOMELAST
+*						m.reg_lbco	= IIF(!ISNULL(vnumcorlbc),vnumcorlbc,"")
+*!*							
+*!*							&&IF m.codigo = m.cdg_tdoc AND m.numero = m.num_docu AND m.corre = m.num_cor
+*!*								SELECT res_pgop
+*!*								INSERT INTO res_pgop FROM MEMVAR
+*!*							&&ENDIF
+*!*							
+*!*							SELECT docum
+*!*							SKIP IN docum
+*!*						ENDDO
+*!*					&& ENDIF
+				
+			*!*		SELECT curNumDocu
+			*!*		SKIP IN curNumDocu
+			*!*		
+			*!*	ENDDO
+
+
+*!*				SELECT RES_PGOP
+*!*				GO TOP
+
+
+
+	 
+   ELSE
+*!*	      ticket_lbco()     
+*!*	   ENDIF
+*!*	   
+*!*	ELSE
+*!*		MessageBox('No hay Información')
+*!*	ENDIF
+
+*!*		SELECT res_pgop
+*!*		GO TOP
+*!*		IF nCHECK1 <> 1 THEN
+*!*			DO FORM frm_emit.scx WITH "rep_pgop.frx", " "
+*!*		ELSE
+		SELECT BANCO
+		SELECT res_pgop 
+		GO TOP
+	 
+
+		SET DEVICE TO PRINT
+		N			=	19
+		
+		cPrintIni 	= 	CHR(27) + CHR(64) + CHR(27) + CHR(67) + CHR(62) + CHR(27) + CHR(77)
+		??? cPrintIni
+
+		empresa		= glogin
+		direccion 	= gdirre 
+		tele 		= gTelef  
+		cfecha 		= DTOC(DATE())
+		chora 		= TIME()
+		
+		
+		DO WHILE !EOF("res_pgop")
+		   	FORMAPAG 	= res_pgop.FOR_PAG
+			NUM 		= res_pgop.NUM_CTA
+		   	CHEQ 		= res_pgop.NUM_CHEQ
+			FEC 		= res_pgop.FEC_PAGO
+		   	IMP 		= IIF( res_pgop.cdg_mon = "002", "US$ ", "S/. ") + ALLTRIM( STR( res_pgop.total, 15, 2) )
+			PROV 		= res_pgop.DES_PRV
+			
+			SELECT res_pgop
+			SKIP IN res_pgop
+			
+		ENDDO	
+			
+
+		@ 2,10  SAY EMPRESA	
+		@ 2,38  SAY "VOUCHER PAGO A PROVEEDORES"
+		@ 2,74  SAY ("FECHA : " + cfecha)
+		@ 3,10  Say DIRECCION
+		@ 3,74  SAY ("HORA  : " + chora)
+		@ 4,10  SAY TELE
+		@ 6,6   SAY "------------------------------------------------------------------------------------------"	
+		@ 8,18  SAY ("FORMA PAGO : ")
+		@ 8,31  SAY FORMAPAG
+	    @ 9,23  SAY ("BANCO :")
+	    @ 9,31  SAY banco.des_item
+	    @ 10,18 SAY ("NRO CUENTA :") 
+	    @ 10,31 SAY NUM
+	    @ 11,9  SAY ("NRO CHEQUE/TRANSFER :")
+	    @ 11,31 SAY CHEQ
+		@ 12,18 SAY ("FECHA PAGO :")
+		@ 12,31 SAY FEC
+	    @ 13,14 SAY ("IMPORTE PAGADO :")
+	    @ 13,31 SAY IMP
+	    @ 14,19 SAY ("PROVEEDOR :")
+	    @ 14,31 SAY PROV
+	    @ 16,6  SAY "------------------------------------------------------------------------------------------"	
+		@ 17,15 SAY "TIPO DOC"
+		@ 17,29 SAY "NRO. DOC"
+		@ 17,43 SAY "IMPORTE/ORIGEN"
+		@ 17,59 SAY "IMPORTE/PAGO"
+		@ 17,76 SAY "TIP-CAMBIO"
+		@ 18,6  SAY "------------------------------------------------------------------------------------------"	
+		
+
+		SELECT res_pgop 
+	    GO TOP
+	 	
+		DO WHILE !EOF("res_pgop")
+		   	@ N,15 SAY res_pgop.DES_DOCU
+		   	@ N,29 SAY res_pgop.NUM_DOCU
+		   	@ N,43 SAY IIF(res_pgop.mondocu = "001", "S/. " +  ALLTRIM( STR(res_pgop.imp_docu, 15, 2) ), "US$" + ALLTRIM(STR(res_pgop.imp_docu,15,2)))
+			@ N,60 SAY IIF(res_pgop.cdg_mon = "001", "S/ " +  ALLTRIM( STR(res_pgop.imp_pago, 15, 2) ), "US$." + ALLTRIM(STR(res_pgop.imp_pago,15,2)))
+			@ N,76 SAY res_pgop.CAMBIO
+			
+		    N = N + 1
+		   	IIF ( N = 55,N = 19,N = N) 
+			
+			SELECT res_pgop
+			SKIP IN res_pgop
+		ENDDO
+		  
+
+		@ N,6   SAY "------------------------------------------------------------------------------------------"	
+		@ 55,6  SAY "------------------------------------------------------------------------------------------"	
+		@ 57,15 SAY "REVISADO"
+		@ 57,45 SAY "AUTORIZADO"
+		@ 57,75 SAY "RECIBI CONFORME"
+		@ 58,6  SAY "------------------------------------------------------------------------------------------"	
+
+		MESSAGEBOX("IMPRIMIENDO.....")
+		EJECT
+		SET PRINTER TO
+		SET PRINTER OFF
+		SET DEVICE TO SCREEN
+
+		RETURN
+	ENDIF
+
+	RETURN
+ENDFUNC
+*/---------------------------------------------------------------/*
+*/ Nombre           : ForPgop
+*/ Descripción      : Voucher de Pago a Proveedores
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
