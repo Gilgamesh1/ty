@@ -1,0 +1,97 @@
+*/---------------------------------------------------------------/*
+*/ Nombre           : FORCHEQUE
+*/ Version     		: 027-20170516
+*/ Descripción      : Impresion de Cheques
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
+FUNCTION ForCheque
+	PARAMETERS cBanco,cReporte,cCuenta,nNumCor
+
+stm = "	select  		 "
+stm = stm + "	A.ano	,	 "
+stm = stm + "	A.mes	,	 "
+stm = stm + "	BCO.des_item des_bco	,	 "
+stm = stm + "	A.num_cta	,	 "
+stm = stm + "	A.num_cor	,	 "
+stm = stm + "	MON.des_item des_mon	,	 "
+stm = stm + "	FPA.des_item des_fpag	,	 "
+stm = stm + "	a.fec_docu	,	 "
+stm = stm + "	a.fec_docu	fec_cheq,	 "
+stm = stm + "	a.num_docu	,	 "
+stm = stm + "	a.num_docu	num_cheq,	 "
+stm = stm + "	a.con_docu	,	 "
+stm = stm + "	a.con_docu	Des_bene ,	 "
+stm = stm + "	a.imp_debe	,	 "
+stm = stm + "	a.imp_haber	,	 "
+stm = stm + "	a.imp_haber	imp_cheq ,	 "
+stm = stm + "	a.swt_est	,	 "
+stm = stm + "	a.swt_atn	,	 "
+stm = stm + "	a.tip_cmb	,	 "
+stm = stm + "	b.num_itm	,	 "
+stm = stm + "	TDC.des_item  des_tdoc	,	 "
+stm = stm + "	b.num_docu num_docuD	,	 "
+stm = stm + "	mlb.des_item des_tmov	,	 "
+stm = stm + "	a.des_prv,		 "
+stm = stm + "	b.imp_debe imp_debeD	,	 "
+stm = stm + "	b.imp_haber imp_haberD	,	 "
+
+stm = stm + "	b.cdg_tana	,	 "
+stm = stm + "	b.cdg_anal	,	 "
+stm = stm + "	MON.des_ITEM des_monD	,	 "
+stm = stm + "	a.cdg_mon		 "
+
+*--0017
+stm = stm + "	,p.cdg_mon mondocu		 "
+stm = stm + "	,coalesce(p.val_ftot,0.00) imp_docu	 "
+stm = stm + "	,(b.imp_debe+b.imp_haber) imp_pago	 "
+stm = stm + "	,p.fec_vcto vct_docu	 "
+stm = stm + "	,b.tip_cmb cambio "
+stm = stm + "	,TDC.tip_item AS signo "
+*--0017
+
+stm = stm + "	from m_libbco a 		 "
+stm = stm + "	left join d_libbco b on a.cdg_bco=b.cdg_bco and a.num_cta=b.num_cta and a.num_cor=b.num_cor		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='BCO' ) BCO on a.cdg_bco=BCO.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='FPA' ) FPA on a.cdg_fpag=fpa.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='TDC' ) TDC on B.cdg_tdoc=TDC.num_item		 "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='MLB' ) MLB on B.cdg_tmov=MLB.num_item	AND MLB.ANO_PLAN=SUBSTR(b.num_cor,1,4) "
+stm = stm + "	left join (select * from d_tablas where cdg_Tab='MON' ) MON on B.mon_ori=MON.num_item		 "
+stm = stm + "	left join M_DOCPRV P on p.cdg_tdoc=B.cdg_tdoc and p.num_docu=b.num_docu and p.ruc_prv=rtrim(SUBSTR(b.cdg_anal,2)) "
+stm = stm + "	where  "
+stm = stm + " A.cdg_bco = '"+cBanco+"' AND "
+stm = stm + " A.num_cta = '"+cCuenta+"' AND "
+stm = stm + " A.num_cor = '"+nNumCor+"' "
+stm = stm + " ORDER BY B.num_itm "
+
+*--------
+
+RC  = SQLEXEC(CONEC,stm,'curReplbc')
+ErrSQLEXEC(RC,stm,'frm_lbbco / cmdPrint / Click')
+
+*---
+
+SELECT curReplbc 
+GO top	
+	
+	IF RECCOUNT('curReplbc') > 0 AND !EMPTY(cReporte) THEN
+		DO FORM frm_emit.scx WITH ALLTRIM(cReporte) , " "
+	ENDIF
+
+
+*!*		SELECT curCheque
+*!*		GO TOP
+*!*		IF RECCOUNT('curCheque') > 0 AND !EMPTY(cReporte) THEN
+*!*			DO FORM frm_emit.scx WITH ALLTRIM(cReporte) , " "
+*!*		ENDIF
+
+ENDFUNC
+
+*/---------------------------------------------------------------/*
+*/ Nombre           : FORCHEQUE
+*/ Descripción      : Impresion de Cheques
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
