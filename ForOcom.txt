@@ -1,0 +1,272 @@
+*/---------------------------------------------------------------/*
+*/ Nombre           : ForOcom
+*/ Version     		: 024-20102016
+*/ Descripción      : Orden de Compra
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
+FUNCTION ForOcom
+	PARAMETERS nNumOcom
+
+	*---- Emitir Orden de Compra
+	Create Cursor Orden_compra(;
+					num_ocom c(10),;
+					fec_ocom D,;
+					ruc_prv c(15),;
+					imp_stot n(10,2),;
+				  	imp_tigv n(10,2),;
+				  	imp_tdct n(10,2),;
+				  	imp_ttot n(10,2),;
+				  	por_tdct n(10,2),;
+				  	por_tigv n(10,2),;
+				  	cdg_prod c(15),;
+				  	des_prod c(60),;
+				  	abr_umed c(6),;
+				  	Det M,;
+					can_oins n(15,4),;
+					pre_oins n(15,5),;
+					dct_oins n(10,2),;
+					imp_isc n(10,2),;
+					imp_tins n(10,2),;
+					swt_est c(1),;
+					des_prv c(60),;
+					dir_prv c(60),;
+					cdg_mon c(3),;
+					tel_prv c(20),;
+					fax_prv c(20),;
+					con_prv c(50),;
+					des_cpag c(40),;
+					des_mon c(30),;
+					abr_dist c(40),;
+					obs_ord M,;
+					des_dist c(40),;
+					cdg_eqv c(30),;
+					cdg_bar c(30),;
+					peso n(15,4), ;
+					swt_prod n(1,0),;
+					ref1 c(50),;
+					ref2 c(50),;
+					ref3 c(50),;
+					ref4 c(50),;
+					ref5 n(12,2),;
+					ref6 n(12,2),;
+					ref7 n(12,2),;
+					ref8 d,;
+					ref9 d,;
+					ref10 d,;
+					obs_prv c(100);
+					,opref1 c(240);
+					,opref2 c(240);
+					,opref3 c(240);
+					,opref4 c(240);
+					,opref5 c(240);
+					,cdg_est c(1);
+					,cdg_bcoprv c(3);
+					,des_bcoprv c(240);
+					,num_ctaprv c(240);
+	  			  	,refprod1  c(100);
+	  			  	,refprod2  c(100);
+	  			  	,refprod3  c(100);
+	  			  	,refprod4  c(100);
+	  			  	,refprod5  c(100);	  			  		  			  		  			  		  			  	
+				  	)
+
+
+
+	*************** reporte de orden de compra ************
+*!*		stm = "SELECT D_ordcom.num_ocom, M_ordcom.fec_ocom, M_ordcom.ruc_prv, "
+*!*		stm = stm + "M_ordcom.imp_stot, M_ordcom.imp_tigv, M_ordcom.imp_tdct, "
+*!*		stm = stm + "M_ordcom.imp_ttot, M_ordcom.por_tdct, M_ordcom.por_tigv, "
+*!*		stm = stm + "D_ordcom.cdg_prod, M_produc.des_prod , Undmed.abr_item AS abr_umed, d_ordcom.obs_ord as Det, "
+*!*		stm = stm + "D_ordcom.can_oins, D_ordcom.pre_oins, D_ordcom.dct_oins, M_ordcom.imp_isc, "
+*!*		stm = stm + "D_ordcom.imp_tins, M_ordcom.swt_est, M_provee.des_prv, M_provee.dir_prv, m_ordcom.cdg_mon, "
+*!*		stm = stm + "M_provee.tel_prv, M_provee.fax_prv, M_provee.con_prv, Conpag.des_item AS des_cpag, "
+*!*		stm = stm + "Moneda.des_item AS des_mon, Distrito.abr_item AS abr_dist,m_ordcom.obs_ord,"
+*!*		stm = stm + "Distrito.des_item as des_dist,coalesce(m_provee.obs_prv,'') obs_prv,"
+*!*		stm = stm + "m_produc.cdg_eqv,m_produc.cdg_bar, m_produc.swt_igv as swt_prod, m_produc.peso "
+*!*		stm = stm + "FROM m_ordcom, d_ordcom, m_provee, d_tablas Undmed, "
+*!*		stm = stm + "d_tablas Conpag, d_tablas Moneda, d_tablas Distrito, m_produc "
+*!*		stm = stm + "WHERE D_ordcom.num_ocom = M_ordcom.num_ocom "
+*!*		stm = stm + "AND D_ordcom.num_ocom = '"+nNumOcom+"' "
+*!*		stm = stm + "AND M_provee.ruc_prv = M_ordcom.ruc_prv "
+*!*		stm = stm + "AND Conpag.num_item = M_ordcom.cdg_cpag "
+*!*		stm = stm + "AND Moneda.num_item = M_ordcom.cdg_mon "
+*!*		stm = stm + "AND M_produc.cdg_prod = D_ordcom.cdg_prod "
+*!*		stm = stm + "AND Distrito.num_item = M_provee.cdg_udis "
+*!*		stm = stm + "AND Undmed.num_item = M_produc.cdg_umed "
+*!*		stm = stm + "AND (Undmed.cdg_tab = 'UNM' "
+*!*		stm = stm + "AND Conpag.cdg_tab = 'CPG' "
+*!*		stm = stm + "AND Moneda.cdg_tab = 'MON' "
+*!*		stm = stm + "AND Distrito.cdg_tab = 'DST') "
+	*******************************************************	
+	
+stm = "	SELECT b.num_ocom, a.fec_ocom, a.ruc_prv, 	 "
+stm = stm + "	a.imp_stot, a.imp_tigv, a.imp_tdct, 	 "
+stm = stm + "	a.imp_ttot, a.por_tdct, a.por_tigv, 	 "
+stm = stm + "	b.cdg_prod, M_produc.des_prod , Undmed.abr_item AS abr_umed, b.obs_ord as Det, 	 "
+stm = stm + "	b.can_oins, b.pre_oins, b.dct_oins, a.imp_isc, 	 "
+stm = stm + "	b.imp_tins, a.swt_est, c.des_prv, c.dir_prv, a.cdg_mon, 	 "
+stm = stm + "	c.tel_prv, c.fax_prv, c.con_prv, Conpag.des_item AS des_cpag, 	 "
+stm = stm + "	Moneda.des_item AS des_mon, coalesce(Distrito.abr_item,'') AS abr_dist,a.obs_ord,	 "
+stm = stm + "	coalesce(Distrito.des_item,'') as des_dist,COALESCE(c.obs_prv,'') obs_prv,	 "
+stm = stm + "	m_produc.cdg_eqv,m_produc.cdg_bar, m_produc.swt_igv as swt_prod, coalesce(m_produc.peso,0.00) peso  	 "
+stm = stm + "	,OPDET.ref1 opref1,OPDET.ref2 opref2,OPDET.ref3 opref3,OPDET.ref4 opref4,OPDET.ref5 opref5	 "
+stm = stm + "	,a.cdg_est	 "
+stm = stm + "	,c.cdg_bco cdg_bcoprv,BancoPRV.des_item des_bcoprv ,c.num_cta num_ctaprv	 "
+
+	stm = stm + ",coalesce(m_produc.refprod1,'') refprod1  "
+	stm = stm + ",coalesce(m_produc.refprod2,'') refprod2  "
+	stm = stm + ",coalesce(m_produc.refprod3,'') refprod3  "
+	stm = stm + ",coalesce(m_produc.refprod4,'') refprod4  "
+	stm = stm + ",coalesce(m_produc.refprod5,'') refprod5  "
+	
+stm = stm + "	FROM m_ordcom a	 "
+stm = stm + "	left join d_ordcom b on b.num_ocom = a.num_ocom 	 "
+stm = stm + "	left join m_produc on M_produc.cdg_prod = b.cdg_prod 	 "
+stm = stm + "	left join m_provee c on c.ruc_prv = a.ruc_prv 	 "
+stm = stm + "	left join (SELECT * FROM M_OPDET WHERE CDG_IDT='OCOMPRA' ) OPDET on b.num_ocom = OPDET.cdg_docu  AND  b.cdg_prod=OPDET.cdg_prod AND  b.num_sec=OPDET.num_sec "
+stm = stm + "	left join (select * from d_tablas where cdg_tab='UNM' ) Undmed on Undmed.num_item = M_produc.cdg_umed  	 "
+stm = stm + "	left join (select * from d_tablas where cdg_tab='CPG' ) Conpag on Conpag.num_item = a.cdg_cpag 	 "
+stm = stm + "	left join (select * from d_tablas where cdg_tab='MON' ) Moneda on Moneda.num_item = a.cdg_mon  	 "
+stm = stm + "	left join (select * from d_tablas where cdg_tab='DST' ) Distrito on Distrito.num_item = c.cdg_udis  	 "
+stm = stm + "	left join (select * from d_tablas where cdg_tab='BCO' ) BancoPRV on BancoPRV.num_item = c.cdg_bco  	 "
+*stm = stm + "	left join m_cuenta_prov  on m_cuenta_prov.cdg_bco = c.cdg_bco and m_cuenta_prov.cdg_bco	 "
+stm = stm + "   WHERE b.num_ocom = '"+nNumOcom+"' "
+	*******************************************************	
+stm = stm + "   ORDER BY b.num_sec "
+	
+	
+	RC = SQLEXEC(CONEC,stm,'curTemp')
+	ErrSQLEXEC(RC,stm,Program())
+	Select curTemp
+	Go Top
+	Do While !Eof("curTemp")
+		m.num_ocom  = curTemp.num_ocom
+		m.fec_ocom  = curTemp.fec_ocom
+		m.ruc_prv   = curTemp.ruc_prv
+		m.imp_stot  = curTemp.imp_stot
+		m.imp_tigv  = curTemp.imp_tigv
+		m.imp_tdct  = curTemp.imp_tdct
+		m.imp_ttot  = curTemp.imp_ttot
+		m.por_tdct  = curTemp.por_tdct
+		m.por_tigv  = curTemp.por_tigv
+		m.cdg_prod  = curTemp.cdg_prod
+		m.cdg_eqv   = curTemp.cdg_eqv
+		m.cdg_bar   = curTemp.cdg_bar
+		m.des_prod  = NVL(curTemp.des_prod,'')
+		m.abr_umed  = curTemp.abr_umed
+		m.des       = curTemp.det
+		m.can_oins  = curTemp.can_oins
+		m.pre_oins  = curTemp.pre_oins
+		m.dct_oins  = curTemp.dct_oins
+		m.imp_isc   = curTemp.imp_isc
+		m.imp_tins  = curTemp.imp_tins
+		m.swt_est   = curTemp.swt_est
+		m.des_prv   = curTemp.des_prv 
+		m.dir_prv   = curTemp.dir_prv
+		m.cdg_mon   = curTemp.cdg_mon
+		m.tel_prv   = curTemp.tel_prv
+		m.fax_prv   = curTemp.fax_prv
+		m.con_prv   = curTemp.con_prv
+		m.des_cpag  = curTemp.des_cpag
+		m.des_mon   = curTemp.des_mon
+		m.abr_dist  = curTemp.abr_dist
+		m.obs_ord   = curTemp.obs_ord
+		m.des_dist  = curTemp.des_dist
+		m.peso      = curTemp.peso
+		m.swt_prod  = curTemp.swt_prod
+		m.obs_prv	= ALLTRIM(curTemp.obs_prv)
+
+		m.cdg_est = alltrim(curTemp.cdg_est)
+
+		m.opref1= nvl(curTemp.opref1,'')
+		m.opref2= nvl(curTemp.opref2,'')
+		m.opref3= nvl(curTemp.opref3,'')
+		m.opref4= nvl(curTemp.opref4,'')
+		m.opref5= nvl(curTemp.opref5,'')
+
+
+m.cdg_bcoprv=nvl(curTemp.cdg_bcoprv,'')
+m.des_bcoprv=nvl(curTemp.des_bcoprv,'')
+m.num_ctaprv=nvl(curTemp.num_ctaprv,'')
+
+*--017
+m.refprod1=curTemp.refprod1  	  			  	
+m.refprod2=curTemp.refprod2
+m.refprod3=curTemp.refprod3  	  			  	
+m.refprod4=curTemp.refprod4  	  			  	
+m.refprod5=curTemp.refprod5 
+*--017
+		
+		I  = AT('@',curTemp.det,1)
+		II = AT('@',curTemp.det,2)
+
+		IF I = 0
+			m.can_oins = curTemp.can_oins
+		ELSE
+			m.can_oins = VAL(SUBSTR(curTemp.det,I+1,II-I-1))
+			m.pre_oins = ROUND(m.imp_tins / m.can_oins, 5)
+		ENDIF
+
+		IF I = 0
+			m.abr_umed = curTemp.abr_umed
+		ELSE
+			m.abr_umed = SUBSTR(curTemp.det,II+1,5)
+			m.pre_oins = ROUND(m.imp_tins / m.can_oins, 5)
+		ENDIF
+
+		IF I = 0
+			m.det      = curTemp.det
+		ELSE
+			m.Det      = SUBSTR(curTemp.det,1,I-1)
+			m.pre_oins = ROUND(m.imp_tins / m.can_oins, 5)	
+		ENDIF
+		
+		
+		stm = "Select * From m_opcoc Where num_ocom = '"+m.num_ocom+"'"
+		rc  = SqlExec(conec,stm,'curOp')
+		Select curOp
+		
+		m.ref1  = curOp.ref1
+		m.ref2  = curOp.ref2
+		m.ref3  = curOp.ref3
+		m.ref4  = curOp.ref4
+		m.ref5  = curOp.ref5
+		m.ref6  = curOp.ref6
+		m.ref7  = curOp.ref7
+		m.ref8  = curOp.ref8
+		m.ref9  = curOp.ref9
+		m.ref10 = curOp.ref10
+		
+		Select Orden_Compra
+		Insert Into Orden_Compra From Memva
+		
+		
+		Select curTemp
+		Skip in curTemp
+	EndDo
+
+	Use In IIf(Used("curTemp"),"curTemp",0)
+
+	Select Orden_Compra
+	Go Top
+	IF RECCOUNT('orden_compra') = 0
+		ProcFrmStop('los datos de la orden de Compra no estan completos. Verifique')
+	ELSE
+		resp=0
+		DO FORM si_no.scx WITH "Idioma","¿Desea emitir el documento en Ingles?"
+			IF resp=0
+				DO FORM frm_emit.scx WITH "rep_ocom.frx", "orden_compra.num_ocom = '" + nNumOcom + "'"
+			ELSE
+				DO FORM frm_emit.scx WITH "rep_ocom1.frx", "orden_compra.num_ocom = '" + nNumOcom + "'"
+			ENDIF 
+	ENDIF
+
+	IF USED("orden_compra")
+		USE IN orden_compra
+	ENDIF
+
+
+	RETURN
+ENDFUN
