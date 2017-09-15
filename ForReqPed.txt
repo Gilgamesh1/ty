@@ -1,0 +1,84 @@
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForReqPed
+*/ Versión	        : 025-20170620
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
+FUNCTION ForReqPed
+	Parameters nPedido
+
+	Create CurSor Pedido(num_ped c(15),;
+					fec_ped D,;
+					can_ped n(15,4),;
+					cdg_cct c(10),;
+					DES_CCT C(60),;
+					DES_PRI C(60),;
+					DES_USR C(60),;
+					cdg_usu c(15),;
+					cdg_prod c(15),;
+					DES_PROD C(239),;
+					pre_ped n(15,4),;
+					num_ocom c(10),;
+					can_ing n(15,4),;
+					sec n(10,0),;
+					cdg_pri c(3),;
+					hor_ped c(8),;
+					obs_ped M,;
+					est_ped c(1),;
+					num_equiv c(20))
+					
+    stm = "select req_pedido.*,M_PRODUC.DES_PROD "
+	stm = stm + " ,coalesce(REQ_PRIORI.DES_PRI,'') DES_PRI "
+	stm = stm + " ,coalesce(M_CCOSTO.DES_CCT,'') DES_CCT "
+	stm = stm + " ,coalesce(M_USUARI.DES_USR,'') DES_USR "
+    STM = STM + " from req_pedido "
+	stm = stm + " left join M_PRODUC on req_pedido.cdg_prod=m_produc.cdg_prod "
+	stm = stm + " left join M_CCOSTO on req_pedido.cdg_cct = m_ccosto.cdg_cct "
+	stm = stm + " left join REQ_PRIORI on req_pedido.cdg_pri = req_priori.cdg_pri "
+	stm = stm + " left join m_usuari on req_pedido.cdg_usu = m_usuari.cdg_usr"
+	stm = stm + " where "
+	stm = stm + " req_pedido.num_ped = '" + nPedido + "' "
+	stm = stm + " ORDER BY req_pedido.sec"
+	Rc = SqlExec(Conec,stm,'Ped')
+	ErrSQLEXEC(RC,stm,PROGRAM())
+
+
+	******************************************************
+	Select Ped
+	Go Top
+	Do While !Eof("Ped")
+
+      SCATTER memvar
+
+		Select Pedido
+		Insert Into Pedido From MemVar
+
+		Select Ped
+		Skip In Ped
+	EndDo
+
+
+	Use In Ped
+
+	Select Pedido
+	Go Top
+	If Reccount('Pedido') > 0
+		Do Form frm_emit.scx With "rep_reqped.frx", ""
+	Else
+		ProcFrmStop('Los datos registrados en el pedido no estan Completos. Verificar')
+	EndIf
+	
+	Use In Pedido
+	Return
+ENDFUNC
+
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForReqPed
+*/ Versión	        : 025-20170620
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
