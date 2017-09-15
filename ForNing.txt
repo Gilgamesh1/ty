@@ -1,0 +1,280 @@
+*/---------------------------------------------------------------/*
+*/ Nombre           : ForNing
+*/ Versión          : 025-201702
+*/ Descripción      : Notas de Ingreso
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
+FUNCTION ForNing
+	Parameters nIngreso
+	cTipo='001'
+	cNumero=nIngreso
+
+	CREATE CURSOR Nota_ingreso (;
+				 num_guia c(10),; 
+			     fec_guia D,;
+			     cdg_tpg c(3),;
+			     cdg_prod c(15),; 
+			     des_prod c(50),;
+			     can_dgui n(15,4),;
+			     costo n(10,2),; 
+			     abr_umed c(15),;
+			     num_ocom c(10),;
+			     cdg_area c(3),; 
+			     des_area c(35),;
+			     swt_est c(1),;
+			     des_tmov c(35),; 
+			     num_grem c(10),;
+			     fec_grem D,;
+			     obs_guia C(200),; 
+			     ref1 c(20),;
+			     ref2 c(20),;
+			     ref3 c(20),;
+			     ref4 c(20),; 
+			     ref5 c(20),;
+			     des_prov c(240),;
+			     cdg_bar c(20),; 
+			     oref1 c(40),;
+			     oref2 c(40),;
+			     oref3 c(40),; 
+			     oref4 c(40),;
+			     oref5 n(15,4),;
+			     oref6 n(15,4),;
+			     oref7 n(15,4),; 
+			     oref8 D,;
+			     oref9 D,;
+			     oref10 D,;
+			     num_sec N(5,0);
+					,ubic_A c(240);					
+					,ubic_B c(240);					
+					,ubic_C c(240);					
+					,ubic_D c(240);					
+					,ubic_E c(240);					
+					,ubic_F c(240);																									
+	  			  	,refprod1  c(100);
+	  			  	,refprod2  c(100);
+	  			  	,refprod3  c(100);
+	  			  	,refprod4  c(100);
+	  			  	,refprod5  c(100); 			  		  			  		  			  		  			  	
+	  			  	,stk_act   N(16,4);
+		  			,peso n(12,4);
+  			  	    ,cdg_eqv c(15);				  	
+				  	,abr_prod C(60);
+				  	,cdg_cct c(10);
+				  	,cdg_tdoc c(3);
+				  	,num_docu c(10);
+					,swt_ing n(1,0);
+			     	,des_cli c(240);
+					,OPGUI_ref1 c(200);
+				  	,OPGUI_ref2 c(200);
+				  	,OPGUI_ref3 c(200);
+				  	,OPGUI_ref4 c(200);
+				  	,OPGUI_ref5 n(12,2);
+				  	,OPGUI_ref6 n(12,2);				  					  					  					  	
+				  	,OPGUI_ref7 n(12,2);				  					  					  					  	
+				  	,OPGUI_ref8 D;
+				  	,OPGUI_ref9 D;
+				  	,OPGUI_ref10 D;	
+			     )
+
+
+	stm = "SELECT D_guia.num_guia, M_guia.fec_guia, D_guia.cdg_tpg, D_guia.cdg_prod," 
+	stm = stm + " M_produc.des_prod,  D_guia.costo,"
+	stm = stm + " Undmed.abr_item AS abr_umed,M_guia.cdg_area,"
+	stm = stm + " Area.des_item AS des_area,M_guia.swt_est, Tipmov.des_item AS des_tmov,"
+	stm = stm + " M_guia.num_grem,M_guia.fec_grem, M_guia.obs_guia,m_produc.cdg_bar"
+	stm = stm + " ,d_guia.num_sec  " 
+
+	stm = stm + " ,coalesce(M_guia.num_ocom,'') num_ocom "
+	stm = stm + " ,m_ordcom.fec_ocom "
+	stm = stm + " ,coalesce(m_provee.des_prv,'') des_prv " 
+	stm = stm + " ,coalesce(m_opcoc.ref1,'') oref1 "
+	stm = stm + " ,coalesce(m_opcoc.ref2,'') oref2 "
+	stm = stm + " ,coalesce(m_opcoc.ref3,'') oref3 "
+	stm = stm + " ,coalesce(m_opcoc.ref4,'') oref4 "
+	stm = stm + " ,coalesce(m_opcoc.ref5,0.00) oref5 "
+	stm = stm + " ,coalesce(m_opcoc.ref6,0.00) oref6 "
+	stm = stm + " ,coalesce(m_opcoc.ref7,0.00) oref7 "
+	stm = stm + " ,coalesce(m_opcoc.ref8,'"+DTOC(DATE())+"' ) oref8 "
+	stm = stm + " ,coalesce(m_opcoc.ref9,'"+DTOC(DATE())+"' ) oref9 "
+	stm = stm + " ,coalesce(m_opcoc.ref10,'"+DTOC(DATE())+"') oref10 "
+
+	stm = stm + " ,case when D_GUIDT.num_guia is null then D_GUIA.can_dgui else D_GUIDT.can_dgui END can_dgui "
+	stm = stm + " ,coalesce(D_GUIDT.ref1,'') ref1 "
+	stm = stm + " ,coalesce(D_GUIDT.ref2,'') ref2 "
+	stm = stm + " ,coalesce(D_GUIDT.ref3,'') ref3 "
+	stm = stm + " ,coalesce(D_GUIDT.ref4,'') ref4 "
+	stm = stm + " ,coalesce(D_GUIDT.ref5,'') ref5 "
+
+	stm = stm + ", COALESCE(m_produc.ubic_A,'') ubic_A "
+	stm = stm + ", COALESCE(m_produc.ubic_B,'') ubic_B "
+	stm = stm + ", COALESCE(m_produc.ubic_C,'') ubic_C "
+	stm = stm + ", COALESCE(m_produc.ubic_D,'') ubic_D "
+	stm = stm + ", COALESCE(m_produc.ubic_E,'') ubic_E "
+	stm = stm + ", COALESCE(m_produc.ubic_F,'') ubic_F "
+	
+	stm = stm + ",coalesce(m_produc.refprod1,'') refprod1  "
+	stm = stm + ",coalesce(m_produc.refprod2,'') refprod2  "
+	stm = stm + ",coalesce(m_produc.refprod3,'') refprod3  "
+	stm = stm + ",coalesce(m_produc.refprod4,'') refprod4  "
+	stm = stm + ",coalesce(m_produc.refprod5,'') refprod5  "
+
+	stm = stm + ",coalesce(stock.stk_act,0.0000) stk_act "
+	stm = stm + ",coalesce(m_produc.peso,0.00) peso "
+
+	stm = stm + ",coalesce(m_produc.cdg_eqv ,'') cdg_eqv "
+	stm = stm + ",coalesce(m_produc.abr_prod ,'') abr_prod "	
+	stm = stm + ",coalesce(m_guia.cdg_cct ,'') cdg_cct "
+	stm = stm + ",coalesce(m_guia.cdg_tdoc ,'') cdg_tdoc "
+	stm = stm + ",coalesce(m_guia.num_docu ,'') num_docu "		
+
+	stm = stm + " ,m_guia.swt_ing "
+	stm = stm + " ,coalesce(m_client.des_cli,'') des_cli " 
+
+	stm = stm + ",coalesce(M_OPGUIA.ref1,'') OPGUI_ref1 "
+	stm = stm + ",coalesce(M_OPGUIA.ref2,'') OPGUI_ref2 "
+	stm = stm + ",coalesce(M_OPGUIA.ref3,'') OPGUI_ref3 "
+	stm = stm + ",coalesce(M_OPGUIA.ref4,'') OPGUI_ref4 "
+	stm = stm + ",coalesce(M_OPGUIA.ref5,0.00) OPGUI_ref5 "
+	stm = stm + ",coalesce(M_OPGUIA.ref6,0.00) OPGUI_ref6 "
+	stm = stm + ",coalesce(M_OPGUIA.ref7,0.00) OPGUI_ref7 "
+	stm = stm + ",M_OPGUIA.ref8 OPGUI_ref8 "
+	stm = stm + ",M_OPGUIA.ref9 OPGUI_ref9 "
+	stm = stm + ",M_OPGUIA.ref10 OPGUI_ref10 "	
+		 
+	stm = stm + " FROM m_guia "
+	stm = stm + " inner join d_guia on D_guia.cdg_tpg = M_guia.cdg_tpg and D_guia.num_guia = M_guia.num_guia " 
+	stm = stm + " left  join D_GUIDT on D_guia.cdg_tpg = D_GUIDT.cdg_tpg and D_guia.num_guia = D_GUIDT.num_guia " 
+	stm = stm + " 			        and D_guia.cdg_prod = D_GUIDT.cdg_prod and D_guia.num_sec=D_GUIDT.num_sec " 
+		 
+	stm = stm + " left join (select * from d_tablas where cdg_tab='ARE') Area on Area.num_item = case when M_guia.cdg_tpg='001' then M_guia.cdg_area else M_guia.ori_area end " 
+	stm = stm + " left join  m_produc on M_produc.cdg_prod = D_guia.cdg_prod " 
+	stm = stm + " left join (select * from d_tablas where cdg_tab='UNM') Undmed on Undmed.num_item = M_produc.cdg_umed " 
+	stm = stm + " left join (select * from d_tablas where cdg_tab='TMV') Tipmov on Tipmov.num_item = M_guia.cdg_tmov " 
+
+	stm = stm + " left join m_ordcom on M_guia.cdg_tpg='001' AND M_guia.SWT_ING=1 AND m_ordcom.num_ocom=coalesce(m_guia.num_ocom,'') "
+	stm = stm + " left join m_provee on m_ordcom.ruc_prv = m_provee.ruc_prv " 
+
+	stm = stm + " left join m_opcoc on m_opcoc.num_ocom=coalesce(m_guia.num_ocom,'') "
+	stm = stm + " left join (select * from stock ) stock on case when M_guia.cdg_tpg='001' "
+	stm = stm + "         	then M_guia.cdg_area else M_guia.ori_area end=stock.cdg_area "
+	stm = stm + "  			and D_guia.cdg_prod = stock.cdg_prod "
+*	stm = stm + " left join (select * from stock ) stock on M_guia.cdg_area=stock.cdg_area and D_guia.cdg_prod = stock.cdg_prod "
+	stm = stm + " left join (select * from m_doccli where swt_est<>'A' AND CDG_TDOC='005') m_doccli on M_guia.cdg_tpg='001' AND M_guia.SWT_ING=5 "
+	stm = stm + " 																		AND m_doccli.num_DOCU=coalesce(m_guia.num_ocom,'') "
+	stm = stm + " left join m_client on m_doccli.ruc_cli = m_client.ruc_cli " 
+	stm = stm + " left join m_opguia on m_opguia.cdg_tpg=M_guia.cdg_tpg and m_opguia.num_guia = M_guia.num_guia " 
+	stm = stm + " WHERE "
+	stm = stm + " M_guia.cdg_tpg = '"+cTipo+"' " 
+	stm = stm + " AND M_guia.num_guia = '"+cNumero+"' " 
+	stm = stm + " ORDER BY d_guia.num_sec " 
+	RC = SQLEXEC(CONEC,stm,'Nota') 
+	ErrSQLEXEC(RC,stm,Program())
+
+	*********************************************************** 
+	SELECT Nota 
+	GO TOP 
+	DO WHILE !EOF("Nota") 
+		 m.num_guia = Nota.num_guia 
+		 m.fec_guia = Nota.fec_guia 
+		 m.cdg_tpg  = Nota.cdg_tpg 
+		 m.cdg_prod = Nota.cdg_prod 
+		 m.des_prod = Nota.des_prod 
+		 m.can_dgui = Nota.can_dgui 
+		 m.costo    = Nota.costo 
+		 m.abr_umed = Nota.abr_umed 
+		 m.num_ocom = Nota.num_ocom 
+		 m.cdg_area = Nota.cdg_area 
+		 m.des_area = Nota.des_area 
+		 m.swt_est  = Nota.swt_est 
+		 m.des_tmov = Nota.des_tmov 
+		 m.num_grem = Nota.num_grem 
+		 m.fec_grem = Nota.fec_grem 
+		 m.obs_guia = Nota.obs_guia 
+		 m.cdg_bar  = Nota.cdg_bar 
+
+		 m.des_prov = Nota.des_prv 
+		 m.num_sec  = Nota.Num_sec 
+		 
+
+	m.num_ocom = Nota.num_ocom 
+	m.oref1    = Nota.oref1    
+	m.oref2    = Nota.oref2    
+	m.oref3    = Nota.oref3  
+	m.oref4    = Nota.oref4    
+	m.oref5    = Nota.oref5    
+	m.oref6    = Nota.oref6    
+	m.oref7    = Nota.oref7    
+	m.oref8    = Nota.oref8    
+	m.oref9    = Nota.oref9    
+	m.oref10   = Nota.oref10    
+	
+   
+   m.ref1 		= Nota.ref1 
+   m.ref2 		= Nota.ref2 
+   m.ref3 		= Nota.ref3 
+   m.ref4 		= Nota.ref4 
+   m.ref5 		= Nota.ref5 
+				     
+	m.ubic_A=Nota.ubic_A
+	m.ubic_B=Nota.ubic_B
+	m.ubic_C=Nota.ubic_C
+	m.ubic_D=Nota.ubic_D
+	m.ubic_E=Nota.ubic_E
+	m.ubic_F=Nota.ubic_F
+
+	m.refprod1=Nota.refprod1  	  			  	
+	m.refprod2=Nota.refprod2
+	m.refprod3=Nota.refprod3  	  			  	
+	m.refprod4=Nota.refprod4  	  			  	
+	m.refprod5=Nota.refprod5  
+
+	m.stk_act	=Nota.stk_act
+	m.peso		=Nota.peso
+
+	m.cdg_eqv =Nota.cdg_eqv 	  			  	
+	m.abr_prod =Nota.abr_prod 
+	m.cdg_cct =Nota.cdg_cct 	  			  	
+	m.cdg_tdoc =Nota.cdg_tdoc 	  			  	
+	m.num_docu =Nota.num_docu				 
+
+	m.des_cli = Nota.des_cli 
+	m.swt_ing  = Nota.swt_ing
+
+m.OPGUI_ref1=Nota.OPGUI_ref1 
+m.OPGUI_ref2=Nota.OPGUI_ref2 
+m.OPGUI_ref3=Nota.OPGUI_ref3 
+m.OPGUI_ref4=Nota.OPGUI_ref4 
+m.OPGUI_ref5=NVL(Nota.OPGUI_ref5,0.00)
+m.OPGUI_ref6=NVL(Nota.OPGUI_ref6,0.00) 		  					  					  					  	
+m.OPGUI_ref7=NVL(Nota.OPGUI_ref7,0.00) 		  					  					  					  	
+m.OPGUI_ref8=NVL(Nota.OPGUI_ref8,{}) 
+m.OPGUI_ref9=NVL(Nota.OPGUI_ref9,{}) 
+m.OPGUI_ref10=NVL(Nota.OPGUI_ref10,{}) 
+
+	  
+		 SELECT Nota_ingreso 
+		 INSERT INTO Nota_ingreso FROM MEMVAR 
+
+		 SELECT Nota 
+		 SKIP IN Nota 
+	ENDDO 
+
+	  
+	*---- Emitir Nota de Ingreso----* 
+	SELECT Nota_Ingreso 
+	GO TOP 
+	IF RECCOUNT('Nota_ingreso') > 0 THEN 
+		DO FORM frm_emit.scx WITH "rep_ning.frx", "" 
+		*DO FORM frm_emit.scx WITH "rep_nsal.frx",""
+	ELSE 
+		DO FORM frm_stop.scx WITH "No hay Informacion", " ", "stop.bmp" 
+	ENDIF
+	 
+
+	USE IN Nota 
+	USE IN nota_ingreso 
+
+	RETURN
+ENDFUNC
