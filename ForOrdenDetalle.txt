@@ -1,0 +1,114 @@
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForOrdenDetalle
+*/ Version			: 026-201705   
+*/ Descripción      :   
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
+FuncTion ForOrdenDetalle
+	Parameters nOrd
+
+m.cdg_ord=nOrd
+
+CREATE CURSOR Detalle(cdg_prod c(15),des_prod c(239),cdg_ord c(10),cdg_prod2 c(15),;
+des_prod2 c(60),cos_unit n(10,2),cantidad n(10,2),stk_cons n(10,2),tipo c(60),fec_ord d,fec_cierre d,REF3 C(1),TGRUPO C(1))
+
+cCondicion = " and p_orden.cdg_ord = '"+alltrim(m.cdg_ord)+"' "
+	
+stm = "SELECT p_orden.*,m_produc.des_prod FROM P_ORDEN,M_PRODUC WHERE p_orden.cdg_prod "
+stm = stm + " = m_produc.cdg_prod and p_orden.ref4 <> '' " + cCondicion
+
+stm = stm + " Order By p_orden.cdg_ord"
+rc  = SQLEXEC(CONEC,STM,'curOrden')
+
+Select curOrden
+Go Top
+Do While !Eof("curOrden")
+    M.TGRUPO = ''
+	m.fec_ord = curOrden.fec_ord
+	m.des_prod = curOrden.des_prod
+	m.cdg_prod = curOrden.cdg_prod
+	m.cdg_ord  = curOrden.cdg_ord
+	m.can_sol  = curOrden.stk_sol
+	m.cantidad = curOrden.can_sal
+	m.fec_cierre = curOrden.fec_cierre
+	m.ref3     = curOrden.ref3
+	
+	m.costototal =0
+*---MATERIA PRIMA
+stm = "SELECT p_porden.*,m_produc.des_prod FROM P_pORDEN,M_PRODUC WHERE p_porden.cdg_prod "
+	stm = stm + "= m_produc.cdg_prod and p_porden.cdg_ord = '"+m.cdg_ord+"'"
+	RC  = SqlExec(CONEC,STM,'curProd1rep')
+	Go Top
+	Do While !Eof("curProd1rep")
+	
+		m.cdg_prod2 = curProd1rep.cdg_prod
+		m.des_prod2 = curProd1rep.des_prod
+		m.stk_cons  = curProd1rep.stk_cons
+		m.cos_unit  = curProd1rep.costo &&round(m.stk_cons * curProd1rep.costo,2)
+		m.tipo = "MATERIA PRIMA"
+			
+		m.costototal = m.costototal+m.cos_unit
+			
+		Select Detalle
+		Insert Into Detalle From MemVar
+					
+		Select curProd1rep
+		Skip In curProd1rep
+
+	EndDo
+*---MATERIA PRIMA
+			
+	Select curOrden
+	Skip In curOrden
+	
+	stm = "SELECT p_orden.*,m_produc.des_prod FROM P_ORDEN,M_PRODUC WHERE p_orden.cdg_prod "
+	stm = stm + " = m_produc.cdg_prod AND P_ORDEN.CDG_ORD='"+ALLTRIM(m.cdg_ord)+"' "
+*	stm = stm + " and p_orden.fec_ord >= '"+dtoc(ddesde)+"' "
+*	stm = stm + " and p_orden.fec_ord <= '"+dtoc(dhasta)+"' "
+	stm = stm + " Order By p_orden.REF4"
+	RC  = SQLEXEC(CONEC,STM,'curtemp')
+
+	Select curtemp
+	Go Top
+	M.PORCENT = 0
+	SCAN
+	   	m.cdg_prod2 = curtemp.cdg_prod
+		m.des_prod2 = curtemp.des_prod
+		m.porcen = IIF(curtemp.ref4<>'',100-M.PORCENT,VAL(curtemp.ref8))
+		
+		M.PORCENT = M.PORCENT+M.PORCEN
+
+		m.stk_cons  = curtemp.stk_sol
+		m.cos_unit  = m.costototal*m.porcen/100
+		
+		m.tipo = IIF(CURTEMP.REF4<>'',"PRODUCTO PRINCIPAL","PRODUCTOS ADICIONALES")
+		m.tgrupo = 'R'
+			
+		Select Detalle
+		Insert Into Detalle From MemVar
+
+	ENDSCAN
+
+ENDDO
+	
+Select Detalle 
+Go Top
+
+If Reccount() > 0
+	Do Form frm_emit.scx WITH "pro_orddet.frx", ""
+Else
+	ProcFrmStop('No hay datos o estan incompletos')
+EndIf
+Use In Detalle
+	RETURN
+ENDFUNC
+
+*/---------------------------------------------------------------/*
+*/ Nombre           : ForOrdenDetalle
+*/ Descripción      :  
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/---------------------------------------------------------------/*
