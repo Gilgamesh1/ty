@@ -1,0 +1,656 @@
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForGuia
+*/ Versión 		    : 022-2016-11-22
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
+FuncTion ForGuia
+Parameters nGuia
+
+Create CurSor Guia_remision (num_guia c(10),; 
+			  fec_guia D, cdg_tpg c(3),cdg_prod c(15),num_sec n(10,2),;
+			  des_prod c(60),can_dgui n(10,2),costo n(10,2),;
+			  abr_umed c(15), num_ocom c(10),cdg_area c(3),;
+			  des_area c(35),swt_est c(1),cdg_tmov c(3),des_tmov c(35),;
+			  num_grem c(10),fec_grem D,obs_guia C(200),;
+			  ref1 c(20),ref2 c(20),ref3 c(20),ref4 c(20),;
+			  ref5 c(20), refT M;
+			  ,ruc_cli c(15),num_ped c(8);
+			  ,des_cli c(120);
+			  ,dir_cli c(120);
+			  ,des_distU c(60);
+			  ,des_provU c(60);
+			  ,des_deptU c(60);
+			  ,des_chof c(30),;
+			  rep_cli c(180),;
+			  ruc_chof c(15),car_plac c(10),car_tur c(10),can_pgui n(10,2),cdg_vend c(3),;
+			  can_fgui n(10,2),num_ser c(3),obs_det M,dir_chof c(60),cdg_chof c(3),;
+			  tel_cli c(20),fax_cli c(20),pre_guia n(10,5),linea c(30),peso n(10,2),volumen n(10,2),;
+			  tipo c(20),dct_pprd n(10,2),dct_fic n(10,2),por_tdct n(10,2),por_tigv n(10,2),cdg_mon c(3),abr_prod c(30),;
+  			  des_vend c(50),des_cpag c(30),num_docu c(10),cdg_tdoc c(3),fec_docu D,cdg_eqv c(20),fac_eqv n(10,5),num_lote c(20), ;
+  			  VREF1 CHAR(50),VREF2 CHAR(50),VREF3 CHAR(50),VREF4 CHAR(50),VREF5 CHAR(50),VREF6 CHAR(50), ;
+			  VREF7 CHAR(50),VREF8 CHAR(50),LREF1 CHAR(50), LREF2 CHAR(50), ;
+			  LREF3 CHAR(50),LREF4 CHAR(50),LREF5 CHAR(50),LREF6 CHAR(50),LREF7 CHAR(50), ;
+			  LREF8 CHAR(50), rREF1 CHAR(50), rREF2 CHAR(50), rREF3 CHAR(50), ;
+			  dREF1 CHAR(50), dREF2 CHAR(50), dREF3 CHAR(50), dREF4 CHAR(10),;
+  		  	  mar_chof c(30),pla_chof c(30),cons_chof c(30),lic_chof c(30),imp_area n(12,2),;
+  		  	  dim1 n(12,2),dim2 n(12,2),can_area n(12,2),fec_ped D;
+  		  	  ,des_cli2 c(60);
+  		  	  ,dir_cli2 c(60);
+  		  	  ,des_distU2 c(30);
+	  		  ,des_provU2 c(30);
+	  		  ,des_deptU2 c(30);	  			  	
+  		  	  ,swt_prod n(1,0);
+  		  	  ,des_prov1 c(30),des_depa1 c(30),des_dist1 c(30), hor_usu c(15),;
+CDG_TRAN	 CHAR(3),;
+DES_TRAN	 CHAR(60),;
+DIR_TRAN	 CHAR(100),;
+TEL_TRAN	 CHAR(60),;
+RUC_TRAN	 CHAR(20),;
+SWT_TRAN	 N(1,0),;
+MAR_TRAN	 CHAR(60),;
+PLA_TRAN	 CHAR(60),;
+CONS_TRAN	 CHAR(60),;
+LIC_TRAN	 CHAR(60),;
+CDG_UDIS	 CHAR(3);
+,des_distTRAN c(60);
+					,opref1 c(240);
+					,opref2 c(240);
+					,opref3 c(240);
+					,opref4 c(240);
+					,opref5 n(20,4);
+					,opref6 n(20,4);
+					,opref7 n(20,4);
+					,opref8 D;
+					,opref9 D;
+					,opref10 D;					
+					,ubic_A c(240);					
+					,ubic_B c(240);					
+					,ubic_C c(240);					
+					,ubic_D c(240);					
+					,ubic_E c(240);					
+					,ubic_F c(240);																									
+	  			  	,refprod1  c(100);
+	  			  	,refprod2  c(100);
+	  			  	,refprod3  c(100);
+	  			  	,refprod4  c(100);
+	  			  	,refprod5  c(100); 			  		  			  		  			  		  			  	
+					,OPPED_ref1 c(200);
+				  	,OPPED_ref2 c(200);
+				  	,OPPED_ref3 c(200);
+				  	,OPPED_ref4 c(200);
+				  	,OPPED_ref5 n(12,2);
+				  	,OPPED_ref6 n(12,2);				  					  					  					  	
+				  	,OPPED_ref7 n(12,2);				  					  					  					  	
+				  	,OPPED_ref8 D;
+				  	,OPPED_ref9 D;
+				  	,OPPED_ref10 D;
+				  	,mov_sunat c(10);
+  		  	  )
+			  
+stm = "SELECT D_guia.num_guia, M_guia.fec_guia, M_guia.ruc_cli,M_guia.cdg_tmov, M_guia.num_ped, D_guia.num_lote, M_guia.hor_usu "
+stm = stm + ",M_client.des_cli, M_client.dir_cli, coalesce(Ubidis.distrito,'') AS des_distU "
+stm = stm + ",coalesce(Ubidis.provincia,'') AS des_provU "
+stm = stm + ",coalesce(Ubidis.departamento,'') AS des_deptU "
+stm = stm + ",m_client.tel_cli,COALESCE(M_chofer.des_chof,'') as des_chof, COALESCE(M_chofer.ruc_chof,'') as ruc_chof "
+stm = stm + ",M_guia.car_plac, M_guia.car_tur,m_client.fax_cli,m_client.rep_cli,D_guia.cdg_prod, D_guia.num_sec,M_produc.des_prod "
+stm = stm + ",D_guia.can_dgui,COALESCE(m_chofer.dir_chof,'') as dir_chof,d_guia.pre_guia, Undmed.abr_item AS abr_umed, D_guia.can_pgui, D_guia.can_fgui "
+stm = stm + ",COALESCE(m_chofer.cdg_chof,'') as cdg_chof, cLinea.des_item as Linea, m_produc.peso,m_produc.volumen,  m_produc.abr_prod "
+stm = stm + ",m_produc.cdg_eqv, D_guia.fac_eqv, m_guia.cdg_tdoc, m_guia.num_docu, M_guia.swt_est, T_guia.num_ser,m_guia.obs_guia "
+stm = stm + ",m_guia.cdg_tpg,m_guia.ori_area as cdg_area,Area.des_item as des_area,d_guia.obs_guia as obs_det "
+stm = stm + ",COALESCE(m_chofer.mar_chof,'') as mar_chof,COALESCE(m_chofer.pla_chof,'') as pla_chof,COALESCE(m_chofer.cons_chof,'') as cons_chof,COALESCE(m_chofer.lic_chof,'') as lic_chof "
+stm = stm + ",m_produc.swt_igv as swt_prod,NVL(M_TRANSP2.CDG_TRAN,'') as CDG_TRAN,NVL(M_TRANSP2.DES_TRAN,'') as DES_TRAN "
+
+stm = stm + ",NVL(M_TRANSP2.DIR_TRAN,'') as DIR_TRAN,NVL(M_TRANSP2.TEL_TRAN,'') as TEL_TRAN,NVL(M_TRANSP2.RUC_TRAN,'') as RUC_TRAN "
+stm = stm + ",NVL(M_TRANSP2.SWT_TRAN,1) as SWT_TRAN,NVL(M_TRANSP2.MAR_TRAN,'') as MAR_TRAN,NVL(M_TRANSP2.PLA_TRAN,'') as PLA_TRAN "
+stm = stm + ",NVL(M_TRANSP2.CONS_TRAN,'') as CONS_TRAN,NVL(M_TRANSP2.LIC_TRAN,'') as LIC_TRAN,NVL(M_TRANSP2.CDG_UDIS,'') as CDG_UDIS "
+
+stm = stm + ", Conpag.des_item AS des_cpag,coalesce(m_pedido.cdg_mon,'') cdg_mon, m_pedido.cdg_vend, m_pedido.cdg_usr "
+stm = stm + ",m_produc.refprod1 AS marc_prod,COALESCE(d_sublinea.des_item,'') as slin_prod,COALESCE(d_dsublinea.des_item,'') as grup_prod "
+stm = stm + ",NVL(UbidisTran.DES_ITEM,'') as des_distTRAN,NVL(m_opguia.ref1,'') as ordcompra,NVL(SUBSTR(m_opguia.ref2,1,1),'') as mtraslado "
+
+stm = stm + ", coalesce(m_opguia.ref1,'') AS opref1 "
+stm = stm + ", coalesce(m_opguia.ref2,'') AS opref2 "
+stm = stm + ", coalesce(m_opguia.ref3,'') AS opref3 "
+stm = stm + ", coalesce(m_opguia.ref4,'') AS opref4 "
+stm = stm + ", coalesce(m_opguia.ref5,0) AS opref5 "
+stm = stm + ", coalesce(m_opguia.ref6,0) AS opref6 "
+stm = stm + ", coalesce(m_opguia.ref7,0) AS opref7 "
+stm = stm + ", m_opguia.ref8 AS opref8 "
+stm = stm + ", m_opguia.ref9 AS opref9 "
+stm = stm + ", m_opguia.ref10 AS opref10 "
+stm = stm + ", COALESCE(m_produc.ubic_A,'') ubic_A "
+stm = stm + ", COALESCE(m_produc.ubic_B,'') ubic_B "
+stm = stm + ", COALESCE(m_produc.ubic_C,'') ubic_C "
+stm = stm + ", COALESCE(m_produc.ubic_D,'') ubic_D "
+stm = stm + ", COALESCE(m_produc.ubic_E,'') ubic_E "
+stm = stm + ", COALESCE(m_produc.ubic_F,'') ubic_F "
+	
+	stm = stm + ",coalesce(m_produc.refprod1,'') refprod1  "
+	stm = stm + ",coalesce(m_produc.refprod2,'') refprod2  "
+	stm = stm + ",coalesce(m_produc.refprod3,'') refprod3  "
+	stm = stm + ",coalesce(m_produc.refprod4,'') refprod4  "
+	stm = stm + ",coalesce(m_produc.refprod5,'') refprod5  "
+
+	stm = stm + " ,coalesce(M_OPPED.ref1,'') OPPED_ref1"
+	stm = stm + " ,coalesce(M_OPPED.ref2,'') OPPED_ref2"
+	stm = stm + " ,coalesce(M_OPPED.ref3,'') OPPED_ref3"
+	stm = stm + " ,coalesce(M_OPPED.ref4,'') OPPED_ref4"
+	stm = stm + " ,coalesce(M_OPPED.ref5,0.00) OPPED_ref5"
+	stm = stm + " ,coalesce(M_OPPED.ref6,0.00) OPPED_ref6"
+	stm = stm + " ,coalesce(M_OPPED.ref7,0.00) OPPED_ref7"					
+	stm = stm + " ,M_OPPED.ref8 OPPED_ref8 "
+	stm = stm + " ,M_OPPED.ref9 OPPED_ref9 "
+	stm = stm + " ,M_OPPED.ref10 OPPED_ref10 "	
+
+	stm  = stm + ",COALESCE(m_pedido.num_ocom,'') num_ocom ,COALESCE(m_pedido.cdg_vend,'000') cdg_vend "
+	stm  = stm + ",COALESCE(m_vended.des_vend,'') des_vend "
+
+	stm  = stm + ",COALESCE(d_pedido.pre_pprd,0.00) pre_pprd "
+	stm  = stm + ",COALESCE(d_pedido.dct_pprd,0.00) dct_pprd "
+	stm  = stm + ",COALESCE(d_pedido.dct_fic,0.00) dct_fic "
+	stm  = stm + ",COALESCE(m_pedido.por_tdct,0.00) por_tdct "
+	stm  = stm + ",COALESCE(m_pedido.por_tigv,0.00) por_tigv "
+	stm  = stm + ",m_pedido.fec_ped,UMovTran.cdg_sunat "
+
+stm = stm + "FROM m_guia inner join d_guia on M_guia.num_guia = D_guia.num_guia AND M_guia.cdg_tpg=D_guia.cdg_tpg "
+stm = stm + "left join m_client on M_guia.ruc_cli = M_client.ruc_cli  "
+stm = stm + "left join m_ubigeo Ubidis on Ubidis.ubigeo = M_client.ubigeo "
+stm = stm + "left join m_produc on M_produc.cdg_prod = D_guia.cdg_prod  "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'LIN') cLinea on M_produc.cdg_linp = cLinea.num_item  "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'UNM') Undmed on Undmed.num_item = M_produc.cdg_umed  "
+stm = stm + "left join m_chofer on M_chofer.cdg_chof = M_guia.cdg_chof  "
+stm = stm + "left join t_guia on  T_guia.cdg_tpg = '003' and T_guia.num_ser = LEFT(M_guia.num_guia,3)  "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'ARE') Area on m_guia.ori_area = Area.num_item   "
+stm = stm + "left join M_TRANSP2 on M_guia.car_tur = COALESCE(M_TRANSP2.cdg_tran,'')  "
+stm = stm + "left join m_pedido on m_guia.num_ped = m_pedido.num_ped "
+	stm = stm + " left join M_OPPED on M_OPPED.NUM_PED = m_guia.num_ped "
+	stm = stm + " LEFT JOIN M_VENDED ON m_pedido.cdg_vend = m_vended.cdg_vend "
+	stm = stm + " LEFT JOIN d_pedido ON m_pedido.num_ped = d_pedido.num_ped and d_pedido.cdg_prod = D_guia.cdg_prod "
+	stm = stm + " 															and d_pedido.num_sec = D_guia.num_sec "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'CPG') Conpag on Conpag.num_item = M_pedido.cdg_cpag  "
+stm = stm + "left join d_sublinea on m_produc.cdg_linp=d_sublinea.cdg_tab and m_produc.cdg_tprd=d_sublinea.num_item "
+stm = stm + "left join d_dsublinea on m_produc.cdg_linp=d_dsublinea.cdg_tab and m_produc.cdg_tprd=d_dsublinea.cdg_sub and m_produc.cdg_clap=d_dsublinea.num_item "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'DST') UbidisTran on UbidisTran.num_item = M_TRANSP2.CDG_UDIS "
+stm = stm + "left join m_opguia on m_opguia.num_guia=M_guia.num_guia and m_opguia.cdg_tpg=M_guia.cdg_tpg "
+stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'TGI') UMovTran on m_guia.cdg_mtra=UMovTran.num_item "
+
+stm = stm + "WHERE  "
+stm = stm + " M_guia.cdg_tpg = '003'  "
+*stm = stm + " AND D_guia.cdg_tpg = '003'   "
+*stm = stm + "AND D_guia.can_dgui > 0  "
+stm = stm + " AND D_guia.num_guia = '"+nGuia+"' "
+stm = stm + " ORDER BY D_guia.num_sec "
+
+
+Rc  = SqlExec(Conec,stm,'Guia')
+ErrSQLEXEC(RC,stm,'frm_cped / emite_guia')
+
+*----------------------------------DO--------------------------
+*!*		*-----datos del pedido relacionado a la guia
+
+*!*		stm = "SELECT d_pedido.*,m_pedido.cdg_mon,m_pedido.por_tdct,por_tigv,m_pedido.fec_ped "
+*!*		stm = stm + "	FROM d_pedido,m_pedido WHERE m_pedido.num_ped = "
+*!*		stm = stm + "d_pedido.num_ped and d_pedido.num_ped = '"+m.num_ped+"' and "
+*!*		stm = stm + "d_pedido.cdg_prod = '"+m.cdg_prod+"'"
+*!*		RC  = SqlExec(Conec,stm,'curPed')
+*!*		Select curPed
+*!*		Go Top
+*!*		If Reccount() > 0
+*!*			m.pre_guia = curPed.pre_pprd
+*!*			m.dct_pprd = curPed.dct_pprd
+*!*			m.dct_fic  = curPed.dct_fic
+*!*			m.por_tdct = curPed.por_tdct
+*!*			m.por_tigv = curPed.por_tigv
+*!*			m.cdg_mon  = curPed.cdg_mon
+*!*			m.fec_ped  = curPed.fec_ped
+*!*		Else
+*!*			m.pre_guia = 0.00 &&Guia.pre_guia
+*!*			m.dct_pprd = 0.00
+*!*			m.dct_fic  = 0.00
+*!*			m.por_tdct = 0.00
+*!*			m.por_tigv = 0.00
+*!*			m.fece_ped = Date()
+*!*		EndIf
+	*-----datos del pedido relacionado a la guia
+*!*		stm  = "SELECT COALESCE(m_pedido.num_ocom,'') num_ocom ,COALESCE(m_pedido.cdg_vend,'000') cdg_vend "
+*!*		stm  = stm + ",COALESCE(m_vended.des_vend,'') des_vend ,COALESCE(d_tablas.des_item,'') des_item "
+*!*		stm  = stm + " FROM "
+*!*		stm  = stm + " M_PEDIDO "
+*!*		stm  = stm + " LEFT JOIN M_VENDED ON m_pedido.cdg_vend = m_vended.cdg_vend "
+
+*!*		stm  = stm + " WHERE m_pedido.num_ped = '"+m.num_ped+"' "
+*!*		*stm  = stm + "  and "
+*!*		*stm  = stm + "and d_tablas.cdg_tab = 'CPG' "
+*!*		Rc   = SqlExec(Conec,stm,'curPedido')
+*!*		ErrSQLEXEC(RC,stm,'frm_guia / emite_guia')
+*!*		Select curPedido
+*!*		Go Top
+*!*		If Reccount() > 0
+*!*			m.num_ocom = curPedido.num_ocom
+*!*			m.cdg_vend = curPedido.cdg_vend
+*!*			m.des_vend = curPedido.des_vend
+*!*			m.des_cpag = curPedido.des_item
+*!*		Else
+*!*			m.num_ocom = ""
+*!*			m.cdg_vend = ""
+*!*			m.des_vend = ""
+*!*			m.des_cpag = ""
+*!*		ENDIF
+*!*		
+
+
+*!*	*	----------------
+
+
+Select Guia
+Go Top
+Do While !Eof("Guia")
+
+	m.num_guia = Guia.num_guia
+	m.fec_guia = Guia.fec_guia
+	m.cdg_tpg  = Guia.cdg_tpg
+	m.cdg_prod = Guia.cdg_prod
+
+	m.num_sec = Guia.num_sec
+
+	m.des_prod = Guia.des_prod
+	m.abr_prod = Guia.abr_prod
+	m.can_dgui = Guia.can_dgui
+	m.cantidad = Guia.can_dgui
+	m.abr_umed = Guia.abr_umed
+	m.cdg_area = Guia.cdg_area
+	m.cdg_eqv  = Guia.cdg_eqv
+	m.fac_eqv  = Guia.fac_eqv
+	m.des_area = Guia.des_area
+	m.swt_est  = Guia.swt_est
+	m.obs_guia = Guia.obs_guia
+	m.ruc_cli  = SubStr(Guia.ruc_cli,1,11)
+	m.num_ped  = Guia.num_ped
+	m.des_cli  = Guia.des_cli
+	m.des_chof = Guia.des_chof
+	m.ruc_chof = Guia.ruc_chof
+	m.car_plac = Guia.car_plac
+	m.can_pgui = Guia.can_pgui
+	m.can_fgui = Guia.can_fgui
+	m.num_ser  = Guia.num_ser
+	m.dir_chof = Guia.dir_chof
+
+	m.des_distU = Guia.des_distU 
+	m.des_provU = Guia.des_provU 
+	m.des_deptU = Guia.des_deptU 
+
+	m.des_distU2 = Guia.des_distU 
+	m.des_provU2 = Guia.des_provU 
+	m.des_deptU2 = Guia.des_deptU 
+
+	m.cdg_chof = Guia.cdg_chof
+	m.tel_cli  = Guia.tel_cli
+	m.fax_cli  = Guia.fax_cli
+
+	m.rep_cli  = Guia.rep_cli
+
+	m.linea    = Guia.linea
+	m.num_lote = Guia.num_lote
+	m.cdg_tmov = Guia.cdg_tmov
+	*m.cdg_mon  = ''
+	m.cdg_tdoc = Guia.cdg_tdoc
+	m.num_docu = Guia.num_docu
+	m.fec_docu = m.fec_guia
+	m.mar_chof = Guia.mar_chof
+	m.pla_chof = Guia.pla_chof
+	m.cons_chof = Guia.cons_chof
+	m.lic_chof  = Guia.lic_chof
+	m.des_cli2  = Guia.des_cli
+	m.swt_prod  = Guia.swt_prod 
+	m.hor_usu  = Guia.hor_usu 
+
+	*--2014
+	m.CDG_TRAN=guia.CDG_TRAN
+	m.DES_TRAN=guia.DES_TRAN
+	m.DIR_TRAN=guia.DIR_TRAN
+	m.TEL_TRAN=guia.TEL_TRAN
+	m.RUC_TRAN=guia.RUC_TRAN
+	m.SWT_TRAN=guia.SWT_TRAN
+	m.MAR_TRAN=guia.MAR_TRAN
+	m.PLA_TRAN=guia.PLA_TRAN
+	m.CONS_TRAN=guia.CONS_TRAN
+	m.LIC_TRAN=guia.LIC_TRAN
+	m.CDG_UDIS=guia.CDG_UDIS
+	
+	m.ubic_A=guia.ubic_A
+	m.ubic_B=guia.ubic_B
+	m.ubic_C=guia.ubic_C
+	m.ubic_D=guia.ubic_D
+	m.ubic_E=guia.ubic_E
+	m.ubic_F=guia.ubic_F
+
+m.refprod1=guia.refprod1  	  			  	
+m.refprod2=guia.refprod2
+m.refprod3=guia.refprod3  	  			  	
+m.refprod4=guia.refprod4  	  			  	
+m.refprod5=guia.refprod5  
+
+&& Datos Adicionales Pedido relacionado a la Factura
+m.OPPED_ref1= nvl(guia.OPPED_ref1 ,'')
+m.OPPED_ref2= nvl(guia.OPPED_ref2 ,'')
+m.OPPED_ref3= nvl(guia.OPPED_ref3 ,'')
+m.OPPED_ref4= nvl(guia.OPPED_ref4 ,'')
+m.OPPED_ref5= nvl(guia.OPPED_ref5 , 0.00)
+m.OPPED_ref6= nvl(guia.OPPED_ref6 , 0.00)
+m.OPPED_ref7= nvl(guia.OPPED_ref7 , 0.00)
+m.OPPED_ref8= nvl(guia.OPPED_ref8 ,{})
+m.OPPED_ref9= nvl(guia.OPPED_ref9 ,{})
+m.OPPED_ref10= nvl(guia.OPPED_ref10 ,{})	
+
+		m.num_ocom = guia.num_ocom
+		m.cdg_vend = guia.cdg_vend
+		m.des_vend = guia.des_vend
+		m.des_cpag = guia.des_cpag
+		m.mov_sunat = guia.cdg_sunat
+		
+	stm = "SELECT * FROM D_TABLAS WHERE CDG_TAB = 'DST' "
+	stm = stm + " AND NUM_ITEM = '"+m.CDG_UDIS+"' "
+	rc  = SqlExec(conec,stm,'curTe')
+	Select curTe
+	Go Top
+	If Reccount() > 0
+	M.des_distTRAN=curTe.DES_ITEM
+	ELSE
+	M.des_distTRAN=""
+	ENDIF
+
+	*--2014
+
+	*--0015
+	m.opref1=guia.opref1
+	m.opref2=guia.opref2
+	m.opref3=guia.opref3
+	m.opref4=guia.opref4
+	m.opref5=guia.opref5
+	m.opref6=guia.opref6
+	m.opref7=guia.opref7
+	m.opref8=nvl(guia.opref8,{})
+	m.opref9=nvl(guia.opref9,{})
+	m.opref10=nvl(guia.opref10,{})
+
+		m.pre_guia = guia.pre_pprd
+		m.dct_pprd = guia.dct_pprd
+		m.dct_fic  = guia.dct_fic
+		m.por_tdct = guia.por_tdct
+		m.por_tigv = guia.por_tigv
+		m.cdg_mon  = guia.cdg_mon
+		m.fec_ped  = nvl(guia.fec_ped,{})
+		
+
+	IF ISNULL(m.cdg_tdoc)
+		m.cdg_tdoc = ''
+	ENDIF
+
+	IF ISNULL(m.num_docu)
+		m.num_docu = ''
+	ENDIF
+
+	stm = "Select * From r_guia Where cdg_tpg = '"+m.cdg_tpg+"' and num_guia = '"+m.num_guia+"'"
+	rc  = SqlExec(conec,stm,'curTemp')
+	Select curTemp
+	Go Top
+	If Reccount() > 0
+
+	m.vref1 = curTemp.vRef1
+	m.vref2 = curTemp.vRef2
+	m.vref3 = curTemp.vRef3
+	m.vref4 = curTemp.vRef4
+	m.vref5 = curTemp.vRef5
+	m.vref6 = curTemp.vRef6
+	m.vref7 = curTemp.vRef7
+	m.vref8 = curTemp.vRef8
+
+	m.lref1 = curTemp.lRef1
+	m.lref2 = curTemp.lRef2
+	m.lref3 = curTemp.lRef3
+	m.lref4 = curTemp.lRef4
+	m.lref5 = curTemp.lRef5
+	m.lref6 = curTemp.lRef6
+	m.lref7 = curTemp.lRef7
+	m.lref8 = curTemp.lRef8
+
+	m.rRef1 = curTemp.rRef1
+	m.rRef2 = curTemp.rRef2
+	m.rRef3 = curTemp.rRef3
+
+	m.dRef1 = curTemp.dRef1
+	m.dRef2 = curTemp.dRef2
+	m.dRef3 = curTemp.dRef3
+	m.dRef4 = curTemp.dRef4
+	m.num_docu = IIf(Empty(m.num_docu),m.dRef4,m.num_docu)
+
+	EndIf
+
+
+	stm = "Select xprov.des_item  as des_prov1, xdepa.des_item  as des_depa1 from d_tablas xprov,d_tablas xdepa, m_client where  m_client.ruc_cli='"+m.ruc_cli+"' AND xprov.cdg_tab='LUG' AND xdepa.cdg_tab='ZON' AND xprov.num_item=m_client.ref1 AND xdepa.num_item=m_client.ref2"
+	RC  = SqlExec(Conec,stm,'curProv')
+	Go Top
+	If Reccount() > 0
+		m.des_prov1 = curProv.des_prov1
+		m.des_depa1 = curProv.des_depa1
+	Else
+		m.des_prov1 = ''
+		m.des_depa1 = ''
+	EndIf
+
+
+	m.peso     = Guia.peso
+	m.volumen  = Guia.volumen
+	m.vol      = padl(alltrim(str(Guia.volumen)),3,'0')
+	m.tipo     = ''
+	 
+	stm  = "SELECT des_item FROM d_tablas WHERE num_item = '"+m.vol+"' and cdg_tab = 'OTR' "
+	Rc   = SqlExec(Conec,stm,'curTemp')
+	ErrSQLEXEC(RC,stm,'frm_guia / otros')
+	Select curTemp
+	Go Top
+	If Reccount() > 0
+		m.tipo = curTemp.des_item
+	EndIf
+
+
+
+
+	m.can_area = m.can_dgui
+	m.dim1     = 0.00
+	m.dim2     = 0.00
+	m.imp_area = 0.00
+
+	stm = "Select can_pprd,dim1,dim2,imp_area From d_cotiza Where num_ped = '"+m.num_ocom+"'"
+	stm = stm + " and cdg_prod = '"+m.cdg_prod+"'"
+	rc  = SqlExec(conec,stm,'curTemp')
+	If rc = 1
+		Select curTemp
+		Go Top
+		If Reccount() > 0
+			m.can_area = curTemp.can_pprd
+			m.dim1     = curTemp.dim1
+			m.dim2     = curTemp.dim2
+			m.imp_area = curTemp.imp_area
+		EndIf
+	EndIf
+
+	I  = AT('@',Guia.obs_det,1)
+	II = AT('@',Guia.obs_det,2)
+	IF II = 0
+
+		m.can_dgui = Guia.can_dgui
+		IF I = 0
+		m.abr_umed = Guia.abr_umed
+		ELSE
+		m.abr_umed = SUBSTR(Guia.obs_det,I+1,5)
+		ENDIF
+		IF I = 0
+		m.obs_det  = Guia.obs_det
+		ELSE
+		m.obs_det  = SUBSTR(Guia.obs_det,1,I-1)
+		ENDIF
+
+	Else
+
+		IF I = 0
+			m.can_dgui = Guia.can_dgui
+		ELSE
+			m.can_dgui = VAL(SUBSTR(Guia.obs_det,I+1,II-I-1))
+		ENDIF
+		IF I = 0
+			m.abr_umed = Guia.abr_umed
+		ELSE
+			m.abr_umed = SUBSTR(Guia.obs_det,II+1,5)
+		ENDIF
+		IF I = 0
+			m.obs_det  = Guia.obs_det
+		ELSE
+			m.obs_det  = SUBSTR(Guia.obs_det,1,I-1)
+		ENDIF
+
+	EndIf
+
+	m.factor   = Round(m.can_dgui / m.cantidad,5)
+	m.dir_cli  = Guia.dir_cli
+	m.des_cli  = Guia.des_cli
+	m.dir_cli2 = m.dir_cli
+	m.ref1     = ""
+	m.ref2     = ""
+	m.ref3     = ""
+	m.ref4     = ""
+	m.ref5     = ""
+	m.refT     = ""
+
+
+	stm = "SELECT d_client.*,d_dirguia.cdg_tpg,d_dirguia.num_guia "
+	stm = stm + " ,coalesce(m_ubigeo.distrito,'') distrito "
+	stm = stm + " ,coalesce(m_ubigeo.provincia,'') provincia "
+	stm = stm + " ,coalesce(m_ubigeo.departamento,'') departamento "
+	stm = stm + " FROM d_dirguia "
+	stm = stm + " left join d_client ON d_dirguia.cdg_dir = d_client.cdg_dir and d_dirguia.ruc_cli = d_client.ruc_cli "
+	stm = stm + " left join m_ubigeo on m_ubigeo.ubigeo = d_client.ubigeo "
+	stm = stm + " WHERE d_dirguia.cdg_tpg = '"+m.cdg_tpg+"' AND d_dirguia.num_guia = '"+m.num_guia+"' "
+
+	Rc  = SqlExec(Conec,stm,'curNombre')
+	ErrSQLEXEC(RC,stm,'Busca otros nombre')
+	Select curNombre
+	Go Top
+	If Reccount() > 0
+
+
+		m.des_cli2  = curNombre.des_cli
+		m.ruc_cli2  = curNombre.ruc_cli2
+
+	m.dir_cli2  = NVL(curNombre.dir_cli,'')
+	m.des_distU2= curNombre.distrito
+	m.des_provU2= curNombre.provincia
+	m.des_deptU2= curNombre.departamento
+
+		IF !EMPTY(m.ruc_cli2)
+			m.ruc_cli = SubStr(m.ruc_cli2,1,11)
+		ENDIF
+
+	EndIf
+
+	*If !IsNull(JDet) .and. JDet <> 0  && Activo para mostrar Detalles
+
+	stm = "SELECT d_guidt.* FROM D_GUIDT,M_GUIA WHERE d_guidt.cdg_tpg = m_guia.cdg_tpg and "
+	stm = stm + "m_guia.num_guia = d_guidt.num_guia and m_guia.cdg_tpg = '"+m.cdg_tpg+"' "
+	stm = stm + "AND m_guia.num_guia = '"+m.num_guia+"' AND d_guidt.cdg_prod = '"+m.cdg_prod+"'"
+	stm = stm + "AND d_guidt.num_sec = "+str(m.num_sec,10,2)+" "
+
+	RC = SQLEXEC(CONEC,stm,'curTemp')
+	ErrSQLEXEC(RC,stm,'frm_ning Detalle Emite_guia')
+	*!*	Select curTemp
+	*!*	Go Top
+	*!*		If JDet = 8          && Cuando Sea columnado
+			Select curTemp
+			Num = Reccount()
+			If Num > 0
+		    	Go Top
+				*Do While !Eof("curTemp")
+					
+					*If Num > 1
+					*	m.can_dgui = IIf(Isnull(curTemp.mas2) or Empty(Val(curTemp.mas2)),curTemp.can_dgui,Val(curTemp.mas2))
+					*EndIf
+					m.ref1     = curTemp.ref1
+					m.ref2     = curTemp.ref2
+					m.ref3     = curTemp.ref3
+					m.ref4     = curTemp.ref4
+					m.ref5     = curTemp.ref5
+							
+					SELECT Guia_Remision
+					INSERT INTO Guia_Remision FROM MEMVAR
+					
+				*	SELECT curTemp
+				*	SKIP IN curTemp
+				*ENDDO
+			Else
+					m.ref1     = ""
+					m.ref2     = ""
+					m.ref3     = ""
+					m.ref4     = ""
+					m.ref5     = ""
+					
+				Select Guia_Remision
+				Insert Into Guia_Remision From MemVar
+			
+			EndIf
+					
+	*!*		Else              && Cuando sea agrupado
+
+	*!*			Select curTemp
+	*!*			Go Top
+	*!*			m.reft = ""
+	*!*			Do While !Eof("curTemp")
+	*!*				
+	*!*				m.cant = AllTrim(Str(Round(curTemp.can_dgui * m.factor,2),12,2))
+	*!*				m.cant = IIf(Isnull(curTemp.mas2) or Empty(Val(curTemp.mas2)),m.cant,AllTrim(curTemp.mas2))
+	*!*				m.reft = m.reft + m.cant + ' / ' + IIf(JDet > 0,IIf(!Empty(curTemp.ref1),AllTrim(curTemp.ref1) ,''),'') + + IIf(JDet > 1,IIf(!Empty(curTemp.ref2),' / '+AllTrim(curTemp.ref2) ,''),'') +  IIf(JDet > 2,IIf(!Empty(curTemp.ref3),' / ' + AllTrim(curTemp.ref3) ,''),'') + + IIf(JDet > 3,IIf(!Empty(curTemp.ref4),' / ' + AllTrim(curTemp.ref4),''),'') + + IIf(JDet > 4,IIf(!Empty(curTemp.ref5),' / ' + AllTrim(curTemp.ref5) ,''),'')  + ' , '
+	*!*	&&			m.reft = m.reft + IIf(JDet > 0,IIf(!Empty(curTemp.ref1),AllTrim(curTemp.ref1) ,''),'') + + IIf(JDet > 1,IIf(!Empty(curTemp.ref2),' / '+AllTrim(curTemp.ref2) ,''),'') +  IIf(JDet > 2,IIf(!Empty(curTemp.ref3),' / ' + AllTrim(curTemp.ref3) ,''),'') + + IIf(JDet > 3,IIf(!Empty(curTemp.ref4),' / ' + AllTrim(curTemp.ref4),''),'') + + IIf(JDet > 4,IIf(!Empty(curTemp.ref5),' / ' + AllTrim(curTemp.ref5) ,''),'')  + ' , '
+	*!*			
+	*!*				Select curTemp
+	*!*				Skip in curTemp
+	*!*			EndDo
+	*!*						
+	*!*			Select Guia_Remision
+	*!*			Insert Into Guia_Remision From MemVar
+	*!*			
+	*!*			
+	*!*		EndIf
+
+
+	*!*	Else
+	*!*		
+	*!*		Select Guia_Remision
+	*!*		Insert Into Guia_Remision From MemVar
+	*!*		
+	*!*	EndIf
+
+	SELECT Guia
+	SKIP IN Guia
+ENDDO
+
+
+
+Select Guia_Remision
+Go Top
+If Reccount() > 0
+	Select guia_remision
+	Go Top
+	DO FORM frm_emit.scx WITH "rep_guia.frx", "guia_remision.num_guia = '" + nGuia + "'", nGuia
+Else
+  	DO FORM frm_stop.scx WITH "No hay Informacion", ;
+								"", ;
+								"STOP.bmp"
+EndIf
+Use In Guia_remision
+
+
+Return
+
+ENDFUNC
