@@ -9,6 +9,7 @@
 FUNCTION ForReqPed
 	Parameters nPedido
 
+
 	Create CurSor Pedido(num_ped c(15),;
 					fec_ped D,;
 					can_ped n(15,4),;
@@ -29,6 +30,8 @@ FUNCTION ForReqPed
 					est_ped c(1),;
 					num_equiv c(20))
 					
+
+
     stm = "select req_pedido.*,M_PRODUC.DES_PROD "
 	stm = stm + " ,coalesce(REQ_PRIORI.DES_PRI,'') DES_PRI "
 	stm = stm + " ,coalesce(M_CCOSTO.DES_CCT,'') DES_CCT "
