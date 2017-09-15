@@ -86,8 +86,7 @@ CDG_UDIS	 CHAR(3);
 				  	,OPPED_ref7 n(12,2);				  					  					  					  	
 				  	,OPPED_ref8 D;
 				  	,OPPED_ref9 D;
-				  	,OPPED_ref10 D;
-				  	,mov_sunat c(10);
+				  	,OPPED_ref10 D;	
   		  	  )
 			  
 stm = "SELECT D_guia.num_guia, M_guia.fec_guia, M_guia.ruc_cli,M_guia.cdg_tmov, M_guia.num_ped, D_guia.num_lote, M_guia.hor_usu "
@@ -153,7 +152,7 @@ stm = stm + ", COALESCE(m_produc.ubic_F,'') ubic_F "
 	stm  = stm + ",COALESCE(d_pedido.dct_fic,0.00) dct_fic "
 	stm  = stm + ",COALESCE(m_pedido.por_tdct,0.00) por_tdct "
 	stm  = stm + ",COALESCE(m_pedido.por_tigv,0.00) por_tigv "
-	stm  = stm + ",m_pedido.fec_ped,UMovTran.cdg_sunat "
+	stm  = stm + ",m_pedido.fec_ped "
 
 stm = stm + "FROM m_guia inner join d_guia on M_guia.num_guia = D_guia.num_guia AND M_guia.cdg_tpg=D_guia.cdg_tpg "
 stm = stm + "left join m_client on M_guia.ruc_cli = M_client.ruc_cli  "
@@ -175,7 +174,6 @@ stm = stm + "left join d_sublinea on m_produc.cdg_linp=d_sublinea.cdg_tab and m_
 stm = stm + "left join d_dsublinea on m_produc.cdg_linp=d_dsublinea.cdg_tab and m_produc.cdg_tprd=d_dsublinea.cdg_sub and m_produc.cdg_clap=d_dsublinea.num_item "
 stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'DST') UbidisTran on UbidisTran.num_item = M_TRANSP2.CDG_UDIS "
 stm = stm + "left join m_opguia on m_opguia.num_guia=M_guia.num_guia and m_opguia.cdg_tpg=M_guia.cdg_tpg "
-stm = stm + "left join (select * from d_tablas u where u.cdg_tab = 'TGI') UMovTran on m_guia.cdg_mtra=UMovTran.num_item "
 
 stm = stm + "WHERE  "
 stm = stm + " M_guia.cdg_tpg = '003'  "
@@ -349,7 +347,6 @@ m.OPPED_ref10= nvl(guia.OPPED_ref10 ,{})
 		m.cdg_vend = guia.cdg_vend
 		m.des_vend = guia.des_vend
 		m.des_cpag = guia.des_cpag
-		m.mov_sunat = guia.cdg_sunat
 		
 	stm = "SELECT * FROM D_TABLAS WHERE CDG_TAB = 'DST' "
 	stm = stm + " AND NUM_ITEM = '"+m.CDG_UDIS+"' "

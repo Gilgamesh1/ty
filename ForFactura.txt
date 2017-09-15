@@ -37,7 +37,7 @@ IF nConsolidado=1
 				  	por_tigv n(7,2),;
 				  	por_tdct n(7,2),;
 				  	cdg_vend c(3),;
-				  	num_ocom c(20),;
+				  	num_ocom c(10),;
 				  	cdg_eqv c(20),;
 				  	des_vend c(40),;
 				  	des_cpag c(30),;
