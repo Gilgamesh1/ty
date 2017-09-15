@@ -1,0 +1,219 @@
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForOrden (Ficha Tecnica de OP)
+*/ Version 		    : 026 201706
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
+FuncTion ForOrden
+	Parameters nPlan,nOrd
+
+M.NOWCLIENT=""
+*M.NOWCLIENT="GAMMA"
+		
+	stm = "Select "
+
+	stm = stm + " 			p_orden.cdg_ord "&& Orden de Producción
+	stm = stm + " 			,p_orden.cdg_plan "&& Código de Plan
+	stm = stm + " 			,linea.des_item des_lin "  && Descripción de Línea
+*	stm = stm + " 			m.cdg_ord  = curTemp.cdg_ord   && Código de Orden
+	stm = stm + " 			,p_orden.cdg_prod cdg_ppro  " && Código de Producto Principal a Producir
+	stm = stm + " 			,m_produc.des_prod des_ppro " && Nombre de Producto Principal a Producir
+	stm = stm + " 			,p_orden.stk_sol stk_sol    "&& Cantidad a Producir
+	stm = stm + " 			,p_orden.fec_ord fec_ord    "&& Fecha de Orden 
+	stm = stm + " 			,p_orden.can_sal can_sal    "&& Cantidad Real Producida
+	stm = stm + " 			,p_plan.dsd_plan dsd_plan   "&& Fecha de Inicio de Plan
+	stm = stm + " 			,p_plan.hst_plan hst_plan   "&& Fecha de Término de Plan
+	stm = stm + " 			,p_orden.fec_cierre fec_cierre "&& Fecha de cierre Orden de Produccion
+	stm = stm + " 			,m_produc.cdg_eqv "
+	stm = stm + " 			,'2008' Ano	"
+	stm = stm + " 			,'12' mes  	"    
+	stm = stm + " 			,'PLANTA 1' planta	"
+
+	stm = stm + " 			,RTRIM(RIGHT(p_orden.cdg_ord,5)||'/'||LEFT(p_orden.cdg_ord,2)) num_lote "
+
+	stm = stm + " 			,'FICHA' TIPOREP   "
+	stm = stm + " 			,'' cdg_spro   "&& Código de Producto Utilizado
+	stm = stm + " 			,'' des_spro      "&& Nombre de Producto Utilizado
+	stm = stm + " 			,0 stk_cons  " && Stock a Utilizar
+	stm = stm + " 			,0 stk_sal    "&& Stock Real Utilizado
+	stm = stm + " 			,0 cos_unit   "&& Cantidad generada
+*!*		stm = stm + " 			,medida.abr_item   uni_med    "&& Unidad de Medida
+*!*		stm = stm + " 			,Grup.des_item      des_tprd   "&& Descripción de Grupo			
+*!*		stm = stm + " 			,coalesce(stock.Stock,0.00) stock     "
+
+	stm = stm + " 			,coalesce(a.cdg_fich,'') cdg_fich     "
+	stm = stm + " 			,coalesce(b.des_rub,'') des_rub "
+	stm = stm + " 			,coalesce(c.des_lin,'') des_lin1 "
+	stm = stm + " 			,coalesce(a.ref1,'') ficha_ref1     "
+	stm = stm + " 			,coalesce(a.ref2,'') ficha_ref2     "
+	stm = stm + " 			,coalesce(a.ref3,'') ficha_ref3     "
+	stm = stm + " 			,coalesce(a.ref4,'') ficha_ref4     "
+	stm = stm + " 			,coalesce(a.ref5,'') ficha_ref5     "
+
+	stm = stm + " 			,coalesce(m_produc.refprod1,'') refprod1 "
+	stm = stm + " 			,coalesce(m_produc.refprod2,'') refprod2 "
+	stm = stm + " 			,coalesce(m_produc.refprod3,'') refprod3 "
+	stm = stm + " 			,coalesce(m_produc.refprod4,'') refprod4 "
+	stm = stm + " 			,coalesce(m_produc.refprod5,'') refprod5 "
+
+	stm = stm + " ,coalesce(M_OPCOP.ref1,'') oref1 "
+	stm = stm + " ,coalesce(M_OPCOP.ref2,'') oref2 "
+	stm = stm + " ,coalesce(M_OPCOP.ref3,'') oref3 "
+	stm = stm + " ,coalesce(M_OPCOP.ref4,'') oref4 "
+	stm = stm + " ,coalesce(M_OPCOP.ref5,0.00) oref5 "
+	stm = stm + " ,coalesce(M_OPCOP.ref6,0.00) oref6 "
+	stm = stm + " ,coalesce(M_OPCOP.ref7,0.00) oref7 "
+	stm = stm + " ,coalesce(M_OPCOP.ref8,'"+DTOC(DATE())+"' ) oref8 "
+	stm = stm + " ,coalesce(M_OPCOP.ref9,'"+DTOC(DATE())+"' ) oref9 "
+	stm = stm + " ,coalesce(M_OPCOP.ref10,'"+DTOC(DATE())+"') oref10 "
+	
+																		
+	stm = stm + " From p_orden "
+	stm = stm + " LEFT JOIN m_produc on p_orden.cdg_prod = m_produc.cdg_prod "
+	stm = stm + " LEFT JOIN p_plan on p_orden.cdg_plan = p_plan.cdg_plan "
+	stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='LIN') linea on linea.num_item = m_produc.cdg_linp "
+
+*!*		stm = stm + " LEFT JOIN p_porden on p_porden.cdg_plan = p_orden.cdg_plan and p_porden.cdg_ord = p_orden.cdg_ord "
+*!*		stm = stm + " LEFT JOIN m_produc PRODD on p_porden.cdg_prod = PRODD.cdg_prod "
+*!*		stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='TPR') Grup   on Grup.num_item = PRODD.cdg_tprd "
+*!*		stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='UNM') medida on medida.num_item = PRODD.cdg_umed "
+
+*!*		stm = stm + " LEFT JOIN (Select Sum(stk_act) Stock,cdg_prod from stock group by cdg_prod ) Stock on Stock.cdg_prod = PRODD.cdg_prod "
+
+	stm = stm + " LEFT JOIN	p_ficha A ON a.cdg_prod = p_orden.cdg_prod "
+	stm = stm + " left join p_rubros b on a.cdg_rub=b.cdg_rub "
+	stm = stm + " left join p_lineas c on b.cdg_rub=c.cdg_rub and c.cdg_lin=a.cdg_lin "
+
+	stm = stm + " left join M_OPCOP on M_OPCOP.cdg_ord = p_orden.cdg_ord "
+
+	
+	stm = stm + "	Where "
+	stm = stm + " p_orden.cdg_plan = '"+nPlan+"' And "
+	stm = stm + " p_orden.cdg_ord = '"+nOrd+"' And "
+	stm = stm + " p_orden.ref4 <> '' "
+
+	stm = stm + " UNION ALL "
+
+	stm = stm + " Select "
+
+	stm = stm + " 			p_orden.cdg_ord "&& Orden de Producción
+	stm = stm + " 			,p_orden.cdg_plan "&& Código de Plan
+	stm = stm + " 			,linea.des_item des_lin "  && Descripción de Línea
+*	stm = stm + " 			m.cdg_ord  = curTemp.cdg_ord   && Código de Orden
+	stm = stm + " 			,p_orden.cdg_prod cdg_ppro  " && Código de Producto Principal a Producir
+	stm = stm + " 			,m_produc.des_prod des_ppro " && Nombre de Producto Principal a Producir
+	stm = stm + " 			,p_orden.stk_sol stk_sol    "&& Cantidad a Producir
+	stm = stm + " 			,p_orden.fec_ord fec_ord    "&& Fecha de Orden 
+	stm = stm + " 			,p_orden.can_sal can_sal    "&& Cantidad Real Producida
+	stm = stm + " 			,p_plan.dsd_plan dsd_plan   "&& Fecha de Inicio de Plan
+	stm = stm + " 			,p_plan.hst_plan hst_plan   "&& Fecha de Término de Plan
+	stm = stm + " 			,p_orden.fec_cierre fec_cierre "&& Fecha de cierre Orden de Produccion
+	stm = stm + " 			,m_produc.cdg_eqv "
+	stm = stm + " 			,'2008' Ano	"
+	stm = stm + " 			,'12' mes  	"    
+	stm = stm + " 			,'PLANTA 1' planta	"
+
+	stm = stm + " 			,RTRIM(RIGHT(p_orden.cdg_ord,5)||'/'||LEFT(p_orden.cdg_ord,2)) num_lote "
+
+	stm = stm + " 			,'MP' TIPOREP   "
+	stm = stm + " 			,p_porden.cdg_prod cdg_spro   "&& Código de Producto Utilizado
+	stm = stm + " 			,PRODD.des_prod des_spro      "&& Nombre de Producto Utilizado
+	stm = stm + " 			,p_porden.stk_cons  stk_cons  " && Stock a Utilizar
+	stm = stm + " 			,p_porden.stk_sal  stk_sal    "&& Stock Real Utilizado
+	stm = stm + " 			,p_porden.cos_unit cos_unit   "&& Cantidad generada
+*!*		stm = stm + " 			,medida.abr_item   uni_med    "&& Unidad de Medida
+*!*		stm = stm + " 			,Grup.des_item      des_tprd   "&& Descripción de Grupo			
+*!*		stm = stm + " 			,coalesce(stock.Stock,0.00) stock     "
+
+	stm = stm + " 			,'' cdg_fich     "
+	stm = stm + " 			,'' des_rub "
+	stm = stm + " 			,'' des_lin1 "
+	stm = stm + " 			,'' ficha_ref1     "
+	stm = stm + " 			,'' ficha_ref2     "
+	stm = stm + " 			,'' ficha_ref3     "
+	stm = stm + " 			,'' ficha_ref4     "
+	stm = stm + " 			,'' ficha_ref5     "
+
+	stm = stm + " 			,coalesce(m_produc.refprod1,'') refprod1 "
+	stm = stm + " 			,coalesce(m_produc.refprod2,'') refprod2 "
+	stm = stm + " 			,coalesce(m_produc.refprod3,'') refprod3 "
+	stm = stm + " 			,coalesce(m_produc.refprod4,'') refprod4 "
+	stm = stm + " 			,coalesce(m_produc.refprod5,'') refprod5 "
+
+	stm = stm + " ,coalesce(M_OPCOP.ref1,'') oref1 "
+	stm = stm + " ,coalesce(M_OPCOP.ref2,'') oref2 "
+	stm = stm + " ,coalesce(M_OPCOP.ref3,'') oref3 "
+	stm = stm + " ,coalesce(M_OPCOP.ref4,'') oref4 "
+	stm = stm + " ,coalesce(M_OPCOP.ref5,0.00) oref5 "
+	stm = stm + " ,coalesce(M_OPCOP.ref6,0.00) oref6 "
+	stm = stm + " ,coalesce(M_OPCOP.ref7,0.00) oref7 "
+	stm = stm + " ,coalesce(M_OPCOP.ref8,'"+DTOC(DATE())+"' ) oref8 "
+	stm = stm + " ,coalesce(M_OPCOP.ref9,'"+DTOC(DATE())+"' ) oref9 "
+	stm = stm + " ,coalesce(M_OPCOP.ref10,'"+DTOC(DATE())+"') oref10 "
+																
+	stm = stm + " From p_orden "
+	stm = stm + " LEFT JOIN m_produc on p_orden.cdg_prod = m_produc.cdg_prod "
+	stm = stm + " LEFT JOIN p_plan on p_orden.cdg_plan = p_plan.cdg_plan "
+	stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='LIN') linea on linea.num_item = m_produc.cdg_linp "
+
+	stm = stm + " LEFT JOIN p_porden on p_porden.cdg_plan = p_orden.cdg_plan and p_porden.cdg_ord = p_orden.cdg_ord "
+	stm = stm + " LEFT JOIN m_produc PRODD on p_porden.cdg_prod = PRODD.cdg_prod "
+*!*		stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='TPR') Grup   on Grup.num_item = PRODD.cdg_tprd "
+*!*		stm = stm + " LEFT JOIN (SELECT * FROM d_tablas where cdg_tab='UNM') medida on medida.num_item = PRODD.cdg_umed "
+
+*!*		stm = stm + " LEFT JOIN (Select Sum(stk_act) Stock,cdg_prod from stock group by cdg_prod ) Stock on Stock.cdg_prod = PRODD.cdg_prod "
+
+*!*		stm = stm + " LEFT JOIN	p_ficha A ON a.cdg_prod = p_orden.cdg_prod "
+*!*		stm = stm + " left join p_rubros b on a.cdg_rub=b.cdg_rub "
+*!*		stm = stm + " left join p_lineas c on b.cdg_rub=c.cdg_rub and c.cdg_lin=a.cdg_lin "
+	stm = stm + " left join M_OPCOP on M_OPCOP.cdg_ord = p_orden.cdg_ord "
+		
+	stm = stm + "	Where "
+	stm = stm + " p_orden.cdg_plan = '"+nPlan+"' And "
+	stm = stm + " p_orden.cdg_ord = '"+nOrd+"' And "
+	stm = stm + " p_orden.ref4 <> '' "
+
+
+	stm = stm + " Order By cdg_ord,tiporep "
+	
+	rc = SqlExec(conec,stm,'curParte')
+	
+		Select curParte
+		Go Top
+		*BROWSE
+		
+		If Reccount('curParte') = 0 THEN
+			MessageBox('No Existe Información, verifique',64,'Impresión de Orden de Producción')
+		Else
+			IF M.NOWCLIENT="GAMMA"
+				DO CASE
+				CASE UPPER(SUBSTR(ALLTRIM(curParte.des_ppro),1,4))='EXTR' &&EXTRUSION
+					Do Form frm_emit With "gamm_01",""				
+				CASE UPPER(SUBSTR(ALLTRIM(curParte.des_ppro),1,4))='IMPR' &&IMPRESION
+					Do Form frm_emit With "gamm_02",""				
+				CASE UPPER(SUBSTR(ALLTRIM(curParte.des_ppro),1,4))='BOLS' &&SELLADO
+					Do Form frm_emit With "gamm_03",""								
+				CASE UPPER(SUBSTR(ALLTRIM(curParte.cdg_prod),1,4))='IMPR' &&CORTE Y REBOBINADO
+					Do Form frm_emit With "gamm_04",""								
+				CASE UPPER(SUBSTR(ALLTRIM(curParte.cdg_prod),1,4))='IMPR' && TERCEROS
+					Do Form frm_emit With "gamm_05",""												
+				OTHERWISE
+					Do Form frm_emit With "rep_parte",""				
+				ENDCASE
+			ELSE	
+				Do Form frm_emit With "rep_parte",""				
+			ENDIF
+			
+		EndIf	
+
+	RETURN
+ENDFUNC
+*/ ---------------------------------------------------------------/*
+*/ Nombre           : ForOrden (Ficha Tecnica de OP)
+*/ Descripción      : Mensaje de usuario 
+*/ Sintaxis         : WaitWind( < cTexto > )
+*/ Parámetros       : cTexto : Texto del mensaje
+*/ Valor Retorno    : NULL
+*/ ---------------------------------------------------------------/*
