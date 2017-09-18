@@ -1,0 +1,251 @@
+USE [bdig]
+GO
+ Object  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date 18092017 103148 a.m. 
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+--exec spi_AdicionaComprobantes  '20153270814', '004','F01', '0000015'
+--select  from fe_cabecera where comprobantenumero='0001136'
+ALTER PROCEDURE [dbo].[spi_AdicionaComprobantes]
+	@Empresa VarChar(11),
+	@TipoDoc Varchar(3),
+    @Serie   Varchar(4),
+    @Numero  Varchar(10)
+
+AS 
+
+Declare @IdFE Int
+
+Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC Varchar(20),
+        @TipoDocRef Varchar(3),@NumeroDocRef Varchar(15),@Motivo Varchar(3),@MotivoSunat varchar(2),
+		@Ruc Varchar(15),@Email Varchar(255),@TipoDocumento Varchar(1),@Direccion Varchar(255),
+		@Anticipo Varchar(1),@Observacion Varchar(255),@Vendedor Varchar(3),@VendedorNombre Varchar(60),
+		@Exportacion Varchar(1),@Gratuita Varchar(1),@FormaPagoCodigo Varchar(3),@FormaPago varchar(100),
+		@Ubigeo Varchar(6),@Departamento Varchar(240),@Provincia Varchar(240),@Distrito Varchar(240),
+		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255)
+
+ Select @Ruc=RUC_CLI,
+        @FechaEmision=cast(cast(Case When @TipoDoc in ('004','005') Then FEC_REF else fec_docu end as datetime) as float),
+		@TasaIgv=POR_TIGV,@Motivo=CDG_TMOV,@FormaPagoCodigo=CDG_CPAG,
+		@NumeroDocRef=DOC_REF,
+		@TipoDocRef=TDOC_REF,@Pedido=NUM_PED,
+		@Anticipo=Case When Isnull(SWT_SAL,'') in ('A','B') then SWT_SAL else '' end,
+		@Exportacion=Case When Isnull(SWT_SAL,'') in ('E')  then SWT_SAL else '' end,
+		@Gratuita=Case When CDG_TMOV='998' Then 'S' else '' end,
+		@Observacion=Isnull(OBS_FCLI,'') 
+   From OpenQuery(EXITUNO32,'select  from M_DOCCLI')
+  Where CDG_TDOC=@TipoDoc
+    And NUM_DOCU=@Serie+@Numero
+
+ -- Búsqueda del tipo de Cambio 
+  Select @TCambio=Isnull(TIP_CMB,0)
+   From OpenQuery(EXITUNO32,'select  from T_CAMBIO')
+  Where cast(Cast(FEC_CMB as datetime) as float)=@FechaEmision
+
+  -- Búsqueda del Cliente
+ Select @Email=EMA_CLI,@Direccion=DIR_CLI,@Ubigeo=UBIGEO,
+		@CorreoTercero=EMAILOTROSFE_1,@CorreoTercero1=EMAILOTROSFE_2,@CorreoTercero2=EMAILOTROSFE_3,
+        @TipoDocumento=Case When CDG_TDOC='001' Then '1' else Case When CDG_TDOC='002' Then '6' else '0' end end 
+   From OpenQuery(EXITUNO32,'select  from M_CLIENT')
+  Where RUC_CLI=@Ruc
+  
+  -- Búsqueda Ubigeo
+ Select @Departamento=DEPARTAMENTO,@Provincia=PROVINCIA,@Distrito=DISTRITO
+   From OpenQuery(EXITUNO32,'select  from M_UBIGEO')
+  Where UBIGEO=@Ubigeo
+  
+ -- Búsqueda del OC
+ Select @OC=NUM_OCOM,@Vendedor=CDG_VEND
+   From OpenQuery(EXITUNO32,'select  from M_PEDIDO')
+  Where NUM_PED=@Pedido
+  
+ -- Búsqueda de Vendedor
+ Select @VendedorNombre=DES_VEND
+   From OpenQuery(EXITUNO32,'select  from M_VENDED')
+  Where CDG_VEND=@Vendedor
+
+ -- Búsqueda Código Sunat por Motivo
+ Select @MotivoSunat=CDG_SUNAT
+   From OpenQuery(EXITUNO32,'select  from D_TABLAS')
+  Where CDG_TAB='TMV' and NUM_ITEM=@Motivo
+  
+ -- Búsqueda Descripcion de FormaPago
+ Select @FormaPago=DES_ITEM
+   From OpenQuery(EXITUNO32,'select  from D_TABLAS') 
+  Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
+  
+ Insert into fe_cabecera(IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
+  EmpresaTelefono,EmpresaCorreo,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,
+  ReceptorTipoDocumento,ReceptorRuc,ReceptorCodigoCliente,ComprobanteCorreoElectronico,ReceptorEmail,ReceptorRazonSocial,
+  ReceptorUbigeo,ReceptorDireccion,ReceptorUrbanizacion,ReceptorDistrito,ReceptorProvincia,ReceptorDepartamento,
+  CorreoTerceroToReceive ,CorreoTerceroTemplate ,CorreoTerceroSubject,CorreoTerceroEnvio,
+  CorreoTerceroToReceive1,CorreoTerceroTemplate1,CorreoTerceroSubject1,CorreoTerceroEnvio1,
+  CorreoTerceroToReceive2,CorreoTerceroTemplate2,CorreoTerceroSubject2,CorreoTerceroEnvio2,
+  TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
+  ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteMontoGratuito,
+  ImpuestoTasaigv,ImpuestoIgv,ComprobanteImporteTotal,ComprobanteDescuentoGlobal,
+  ComprobanteMontoLetras,
+  -- Linea adicionada para comprobantes gratuitos
+  ComprobanteCheckGratuito,ComprobanteMontoLetrasGratuito,
+  --
+  DetraccionPorcentaje,DetraccionMonto,NroCuenta,
+  --
+  ComprobanteRefTipo,ComprobanteRefSerie,ComprobanteRefNumero,ComprobanteRefCodigoMotivo,
+  ComprobanteFechaEmision,FormaPagofechaVencimiento,FormaPagoNotaInstruccion,FormaPagoCodigo,
+  ComprobanteNroOrdenCompra,GuiaRemisionSerie,GuiaRemisionNumero,
+  ComprobanteTipoOperacion,
+  -- Importes con 0
+  ComprobanteTotalCargo,
+  ComercioExteriorMontoFlete,ComercioExteriorMontoSeguro,ComercioExteriorMontoFOB,
+  ComercioExteriorMontoCIF,impuestoisc,impuestoIvap,impuestoOtros,
+  ComprobanteTotalPrepago,
+  PrepagoMonto ,PrepagoValor ,PrepagoMonto1,PrepagoValor1,PrepagoMonto2,PrepagoValor2,
+  PrepagoMonto3,PrepagoValor3,PrepagoMonto4,PrepagoValor4,PrepagoMonto5,PrepagoValor5,
+  Estado,
+  VendedorCodigo,VendedorCorreo,VendedorNombre,VendedorTelefono,Texto2,
+  ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3,ComprobanteGrillaFlag,
+  ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,
+  ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
+  ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
+  Select @IdFE,'6','20153270814','EXITUNO SA','AV. MANUEL CIPRIANO DULANTO NRO. 211','150121' As Ubigeo,'PUEBLO LIBRE','LIMA','LIMA',
+	  '(511)2611843' AS Telefono,'ventas@exituno.com.pe','httpwww.exituno.com.pe',
+      Case When CDG_TDOC='002' Then '01' Else Case When CDG_TDOC='001' Then '03' Else 
+           Case When CDG_TDOC='005' Then '07' Else '08' End End End,
+      Left(NUM_DOCU,1)+'0'+Right(Left(NUM_DOCU,3),2),Right(NUM_DOCU,7),Case When CDG_MON='002' Then 'USD' else 'PEN' End,
+      Case When @Exportacion='E' Then '0' else @TipoDocumento end as TipoDocumento,
+	  Case When @Exportacion='E' Then '-' else RUC_CLI end,RUC_CLI as CodigoCliente,@Email,@Email as emailcliente,DES_CLI,
+      @Ubigeo as ReceptorUbigeo,@Direccion as DirCP,'' As Ubicacion,@Distrito as Distrito,@Provincia as Provincia,@Departamento as Departamento,
+	  -- Correo de otros contactos
+	  @CorreoTercero ,'EST','CPE',Case When Isnull(@CorreoTercero ,'')='' Then 0 else 1 end,
+	  @CorreoTercero1,'EST','CPE',Case When Isnull(@CorreoTercero1,'')='' Then 0 else 1 end,
+	  @CorreoTercero2,'EST','CPE',Case When Isnull(@CorreoTercero2,'')='' Then 0 else 1 end,
+	  --
+	  'PEN','USD',@TCambio as  TipoCambio,
+      Case When CDG_TMOV='998' Then 0 else Case When EXO_IGV=0 Then Round(VAL_FSUB,2) else 0 end end as ValorGravado,
+      Case When CDG_TMOV='998' Then 0 else Case When EXO_IGV=1 Then Round(VAL_FSUB,2) else 0 end end as ValorNoGravado,0,
+	  Case When CDG_TMOV='998' Then Round(VAL_FSUB,2) else 0 end, -- Importe transferencia gratuita
+      POR_TIGV,Case When CDG_TMOV='998' Then 0 else Round(VAL_FIGV,2) end,   -- IGV 
+      Case When CDG_TMOV='998' Then 0 else Round(VAL_FTOT,2) end,
+      VAL_FDES as ImporteTotalDscto, --revisar
+	  Case When CDG_TMOV='998' Then 'TRANSFERENCIA GRATUITA DE UN BIEN YO SERVICIO PRESTADO GRATUITAMENTE'
+	       else dbo.numero_a_letras(Round(VAL_FTOT,2),Case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' End) end,
+	  -- Linea adicionada en referencia para transferencia gratuita
+	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
+	  Case When CDG_TMOV='998' then 'CERO CON 00100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito
+      -- Cuenta de Detracción
+      Case When Round(VAL_FTOTcase When CDG_MON='002' Then @TCambio else 0 end,2)700 Then 10.00 else 0 end,   -- tasa de detracción
+      Case When Round(VAL_FTOTcase When CDG_MON='002' Then @TCambio else 0 end,2)700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)0.10,0) else 0 end,
+      Case When Round(VAL_FTOTcase When CDG_MON='002' Then @TCambio else 0 end,2)700 Then '00003108198' else '' end,
+	  --
+	  case When @TipoDoc IN ('004','005') then Case When TDOC_REF='002' Then '01' Else Case When TDOC_REF='001' Then '03' Else '08' end end Else '' End,
+	  case When @TipoDoc IN ('004','005') then Left(DOC_REF,1)+'0'+Right(left(DOC_REF,3),2)  Else '' End,
+	  case When @TipoDoc IN ('004','005') then Right('0000000'+Right(DOC_REF,7),8)  end,
+	  case When @TipoDoc IN ('004','005') then @MotivoSunat else '' end,
+	  FEC_DOCU,FEC_VCTO,@FormaPago as Instruccion,'1',
+      @OC as OC,Left(NUM_GUIA,3) as Serieguia,RIGHT(NUM_GUIA,7) as NumeroGuia,
+      Case When @Anticipo in ('A','B') Then '04' else Case When @Anticipo='E' Then '02' else '01' end end As TipoOperacion,
+	  0,
+	  0,0,0,
+	  0,0,0,0,
+	  Case When @Anticipo in ('A','B') Then Round(VAL_FSUB,2) else 0 end,
+	  0,0,0,0,0,0,
+	  0,0,0,0,0,0,
+      -1,
+      @Vendedor,'' as VendedorCorreo,@VendedorNombre,'(01)261-1930 ' as VendedorTelefono,'CUENTA DE BANCOS',
+      'BANCO DE CREDITO DEL PERU','Soles'  ,'193-1415354004','002-193-001415354004-13',case when @TipoDoc='005' then 0 else 1 end,
+	  'BANCO DE CREDITO DEL PERU','Dólares','193-1126022169','002-193-001126022169-19',case when @TipoDoc='005' then 0 else 1 end,
+      'BANCO CONTINENTAL'        ,'Soles'  ,'164-0100023345','011-164-000100023345-10',case when @TipoDoc='005' then 0 else 1 end,
+      'BANCO CONTINENTAL'        ,'Dólares','164-0100023353','011-164-000100023353-14',case when @TipoDoc='005' then 0 else 1 end
+   From OpenQuery(EXITUNO32,'select  from M_DOCCLI')
+  Where CDG_TDOC=@TipoDoc
+    And NUM_DOCU=@Serie+@Numero
+  SELECT @IdFE=@@IDENTITY
+
+ --Asignar Valor Idfacturacion
+ Update FE_Cabecera Set IdFacturacion=@IdFE where idFE=@IdFE
+
+ If @Anticipo='B'
+ Begin
+    -- Crear Cursor
+	Declare @PrepagoFecha Float
+    Declare @PCodigo  Varchar(2) ,@PCodigo1  Varchar(2) ,@PCodigo2   Varchar(2) ,@PCodigo3  Varchar(2) ,@PCodigo4  Varchar(2) ,@PCodigo5  Varchar(2)
+	Declare @PMonto   Float      ,@PMonto1   Float      ,@PMonto2    Float      ,@PMonto3   Float      ,@PMonto4   Float      ,@PMonto5   Float
+	Declare @PValor   Float      ,@PValor1   Float      ,@PValor2    Float      ,@PValor3   Float      ,@PValor4   Float      ,@PValor5   Float
+	Declare @PCodigoI Varchar(30),@PCodigoI1 Varchar(30),@PCodigoI2  Varchar(30),@PCodigoI3 Varchar(30),@PCodigoI4 Varchar(30),@PCodigoI5 Varchar(30)
+	Declare @PFecha   float      ,@PFecha1   float      ,@PFecha2    float      ,@PFecha3   float      ,@PFecha4   float      ,@PFecha5   float
+	Declare @PDescrip Varchar(30),@PDescrip1 Varchar(30),@PDescrip2  Varchar(30),@PDescrip3 Varchar(30),@PDescrip4 Varchar(30),@PDescrip5 Varchar(30)
+	--
+	Declare @CDG_TDOC2 Varchar(3),@NUM_DOCU2 Varchar(15),@VAL_ORIG Float,@VAL_APLI Float
+	Declare @nCont Int
+	--
+    Declare Prepagos scroll Cursor For
+    Select CDG_TDOC2,NUM_DOCU2,VAL_ORIG,VAL_APLI
+      From OpenQuery(EXITUNO32,'select  from M_ANTICIPOS')
+     Where CDG_TDOC=@TipoDoc
+       And NUM_DOCU=@Serie+@Numero
+     Order by CDG_TDOC2,NUM_DOCU2
+      Open Prepagos 
+     Fetch From Prepagos Into @CDG_TDOC2,@NUM_DOCU2,@VAL_ORIG,@VAL_APLI
+	 Set @nCont=0
+     While @@FETCH_STATUS = 0
+     Begin 
+	       Select @PrepagoFecha=cast(cast(fec_docu as datetime) as float)
+             From OpenQuery(EXITUNO32,'select  from M_DOCCLI')
+            Where CDG_TDOC=@CDG_TDOC2
+              And NUM_DOCU=@NUM_DOCU2
+
+	       Set @nCont=@nCont+1
+		   If @nCont=1
+              Update FE_Cabecera 
+                 Set PrepagoCodigo=Case When @CDG_TDOC2='002' Then '02' else '03' End,
+                     PrepagoMonto=Round(@VAL_APLI(1+ImpuestoTasaigv100),2),PrepagoValor=@VAL_APLI,
+                     PrepagoCodigoInstruccion=left(@NUM_DOCU2,2)+'0'+Right(left(@NUM_DOCU2,3),1)+'-'+Cast(cast(right(@NUM_DOCU2,7) as int) as varchar),
+                     PrepagoRucEmisor=EmpresaRUC,PrepagoTipoDocumentoIdentidad=EmpresaTipoDocumento,
+                     PrepagoFechaRecepcion=@PrepagoFecha,
+                     PrepagoDescripcion=Isnull(@Observacion,''),
+                     PrepagoEnvio=1
+               Where IdFE=@IdFE
+           else If @nCont=2
+              Update FE_Cabecera 
+                 Set PrepagoCodigo1=Case When @CDG_TDOC2='002' Then '02' else '03' End,
+                     PrepagoMonto1=Round(@VAL_APLI(1+ImpuestoTasaigv100),2),PrepagoValor1=@VAL_APLI,
+                     PrepagoCodigoInstruccion1=left(@NUM_DOCU2,2)+'0'+Right(left(@NUM_DOCU2,3),1)+'-'+Cast(cast(right(@NUM_DOCU2,7) as int) as varchar),
+                     PrepagoRucEmisor1=EmpresaRUC,PrepagoTipoDocumentoIdentidad1=EmpresaTipoDocumento,
+                     PrepagoFechaRecepcion1=@PrepagoFecha,
+                     PrepagoDescripcion1=Isnull(@Observacion,''),
+                     PrepagoEnvio1=1
+               Where IdFE=@IdFE
+		   
+           Fetch From Prepagos Into @CDG_TDOC2,@NUM_DOCU2,@VAL_ORIG,@VAL_APLI
+     End
+     Close Prepagos
+     Deallocate Prepagos
+ End
+
+ Insert into fe_detalle(IdFacturacion,detalleItem,DetalleCodigo,DetalleDescripcion,DetalleMultiDescripcion,
+     Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
+	 DescuentoPorcentaje,DescuentoMonto,
+	 IgvPorcentaje,IgvMonto,DetalleTotal,
+     IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
+     DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV,DetalleUnidadMedidaEmisor) 
+ Select @IdFE,NUM_SEC as item,CDG_PROD,
+        Case When CDG_TDOC in ('004','005') Then Isnull(OBS_DOC,'') else Left(DES_PROD,100) end,'',
+        'NIU',CAN_DFAC,Round(PRE_DFAC(1+@TasaIgv100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
+		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_DFAC,0),2) end,
+		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_FIC,0),2)  end,
+		@TasaIgv,
+		Case When @Gratuita='S' Then 0 else Round(PRE_TOT(@TasaIgv100),2) end,
+		Case When @Gratuita='S' Then 0 else Round(PRE_TOT,2) end,
+        0,0,0,0,
+        Case When @Gratuita='S' Then '2'  else '1'  end,
+		Case When @Gratuita='S' Then '02' else '01' end,
+		Case When @Exportacion='E' Then Case When CDG_TDOC='001' then '10' else '40' end
+		else Case When @Gratuita='S' Then '13' else Case When @TasaIgv=0 Then '30' else '10' end end end,
+		'NIU'
+   From OpenQuery(EXITUNO32,'select D.,DES_PROD from D_DOCCLI D Left Join M_PRODUC P ON d.CDG_PROD=P.CDG_PROD')
+  Where CDG_TDOC=@TipoDoc
+    And NUM_DOCU=@Serie+@Numero
+
+	
