@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 19/09/2017 9:53:42 ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 19/09/2017 03:42:45 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -21,12 +21,12 @@ Declare @IdFE Int
 Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC Varchar(20),
         @TipoDocRef Varchar(3),@NumeroDocRef Varchar(15),@Motivo Varchar(3),@MotivoSunat varchar(2),
 		@Ruc Varchar(15),@Email Varchar(255),@TipoDocumento Varchar(1),@Direccion Varchar(255),
-		@Anticipo Varchar(1),@Observacion Varchar(255),@Vendedor Varchar(3),@VendedorNombre Varchar(60),
+		@Anticipo Varchar(1),@TotalAnticipos integer,@Observacion Varchar(255),@Vendedor Varchar(3),@VendedorNombre Varchar(60),
 		@Exportacion Varchar(1),@Gratuita Varchar(1),@FormaPagoCodigo Varchar(3),@FormaPago varchar(100),
 		@Ubigeo Varchar(6),@Departamento Varchar(240),@Provincia Varchar(240),@Distrito Varchar(240),@Pais Varchar(2),@IdExtPais Varchar(1),
-		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255),@sql varchar(255),@Detraccion float
+		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255),@Detraccion float
 
- Select @Ruc=RUC_CLI,
+ Select @Ruc=rtrim(RUC_CLI),
         @FechaEmision=cast(cast(Case When @TipoDoc in ('004','005') Then FEC_REF else fec_docu end as datetime) as float),
 		@TasaIgv=POR_TIGV,@Motivo=CDG_TMOV,@FormaPagoCodigo=CDG_CPAG,
 		@NumeroDocRef=DOC_REF,
@@ -39,6 +39,14 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   Where CDG_TDOC=@TipoDoc
     And NUM_DOCU=@Serie+@Numero
 
+ -- Busqueda de anticipos
+ Select @TotalAnticipos=Count(*)
+      From OpenQuery(EXITUNO32,'select * from M_ANTICIPOS')
+  Where CDG_TDOC=@TipoDoc
+    And NUM_DOCU=@Serie+@Numero
+
+ Set @Anticipo=Case When Isnull(@TotalAnticipos,0)>0 then 'C' else @Anticipo end
+
  -- Búsqueda del tipo de Cambio 
   Select @TCambio=Isnull(TIP_CMB,0)
    From OpenQuery(EXITUNO32,'select * from T_CAMBIO')
@@ -47,11 +55,11 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   -- Búsqueda del Cliente
  Select @Email=EMA_CLI,@Direccion=DIR_CLI,@Ubigeo=UBIGEO,
 		@CorreoTercero=EMAILOTROSFE_1,@CorreoTercero1=EMAILOTROSFE_2,@CorreoTercero2=EMAILOTROSFE_3,
-        @TipoDocumento=Case When CDG_TDOC='001' Then '1' else Case When CDG_TDOC='002' Then '6' else '0' end end 
+        @TipoDocumento=Case CDG_TDOC When '001' Then '1' when '002' then '6' when '004' then '4' when '005' then '7'  when '007' then 'A' else '0' end 
    From OpenQuery(EXITUNO32,'select * from M_CLIENT')
   Where RUC_CLI=@Ruc
   
-  -- Búsqueda Ubigeo
+ -- Búsqueda Ubigeo
  Select @Departamento=DEPARTAMENTO,@Provincia=PROVINCIA,@Distrito=DISTRITO,@Pais=PAIS,@IdExtPais=SUBSTRING(@ubigeo,0,1)
    From OpenQuery(EXITUNO32,'select * from M_UBIGEO')
   Where UBIGEO=@Ubigeo
@@ -77,8 +85,6 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
 
  -- Búsqueda de Detraccion
- set @sql='SELECT * FROM M_SPOTCLI WHERE RUC_CLI='''+rtrim(@Ruc)+''' AND CDG_TDOC='''+@TipoDoc+''' AND NUM_DOCU='''+@Serie+@Numero+''''
- --print N'texto: '+@sql
  Select @Detraccion=TAS_RET
    From OpenQuery(EXITUNO32,'SELECT * FROM M_SPOTCLI') 
   Where RUC_CLI=@Ruc and CDG_TDOC=@TipoDoc and NUM_DOCU=@Serie+@Numero
@@ -122,7 +128,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
            Case When CDG_TDOC='005' Then '07' Else '08' End End End,
       Left(NUM_DOCU,1)+'0'+Right(Left(NUM_DOCU,3),2),Right(NUM_DOCU,7),Case When CDG_MON='002' Then 'USD' else 'PEN' End,
       Case When @Exportacion='E' Then '0' else @TipoDocumento end as TipoDocumento,
-	  Case When @Exportacion='E' Then '-' else RUC_CLI end,RUC_CLI as CodigoCliente,@Email,@Email as emailcliente,DES_CLI,
+	  RUC_CLI as ReceptorRuc,RUC_CLI as CodigoCliente,@Email,@Email as emailcliente,DES_CLI,
       @Ubigeo as ReceptorUbigeo,@Direccion as DirCP,'' As Ubicacion,case when @IdExtPais!='9' then @Distrito else '' end as Distrito, case when @IdExtPais!='9' then @Provincia else '' end  as Provincia,@Departamento as Departamento,@Pais as Pais,
 	  -- Correo de otros contactos
 	  @CorreoTercero ,'EST','CPE',Case When Isnull(@CorreoTercero ,'')='' Then 0 else 1 end,
@@ -142,17 +148,9 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
 	  Case When CDG_TMOV='998' then 'CERO CON 00/100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito
       -- Cuenta de Detracción
-	  case CDG_TDOC when '005' then 0 else @Detraccion end as DetraccionPorcentaje,
-	  case CDG_TDOC when '005' then 0 else @Detraccion end as DetraccionMonto,
-	  case CDG_TDOC when '005' then '' else '00000372978' end as NroCuenta,  --  No poner guines a la cuenta de detracción
-	--  Set 
- --         DetraccionPorcentaje=Case When ComprobanteTipo='07' then 0 else 10.00 end,
-	--  DetraccionMonto = Case When ComprobanteTipo='07' then 0 else Round(Round(Case When ComprobanteMontoGratuito>0 Then 0 else ComprobanteImporteTotal end,2)*0.10,0) end,
-	--  NroCuenta='00-000-372978'
-	--Where idFE=@Id_Comprobante 
-      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then 10.00 else 0 end as DetraccionPorcentaje,   -- tasa de detracción
-      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*0.10,0) else 0 end as DetraccionMonto,
-      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then '00003108198' else '' end as NroCuenta,
+	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then 0 else @Detraccion end as DetraccionPorcentaje,
+	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then 0 else Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*(@Detraccion/100),0) end as DetraccionMonto,
+	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then '' else '00000372978' end as NroCuenta,
 	  --
 	  case When @TipoDoc IN ('004','005') then Case When TDOC_REF='002' Then '01' Else Case When TDOC_REF='001' Then '03' Else '08' end end Else '' End,
 	  case When @TipoDoc IN ('004','005') then Left(DOC_REF,1)+'0'+Right(left(DOC_REF,3),2)  Else '' End,
@@ -160,11 +158,11 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  case When @TipoDoc IN ('004','005') then @MotivoSunat else '' end,
 	  FEC_DOCU,FEC_VCTO,@FormaPago as Instruccion,substring (@FormaPagoCodigo,1,2) as FormaPagoCodigo,
       @OC as OC,Left(NUM_GUIA,3) as Serieguia,RIGHT(NUM_GUIA,7) as NumeroGuia,
-      Case When @Anticipo in ('A','B') Then '04' else Case When @Anticipo='E' Then '02' else '01' end end As TipoOperacion,
+      Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else '01' end end As TipoOperacion,
 	  0,
 	  0,0,0,
 	  0,0,0,0,
-	  Case When @Anticipo in ('A','B') Then Round(VAL_FSUB,2) else 0 end,
+	  Case When @Anticipo in ('A','B','C') Then Round(VAL_FSUB,2) else 0 end,
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
       -1,
@@ -181,7 +179,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
  --Asignar Valor Idfacturacion
  Update FE_Cabecera Set IdFacturacion=@IdFE where idFE=@IdFE
 
- If @Anticipo='B'
+ If @Anticipo='C'
  Begin
     -- Crear Cursor
 	Declare @PrepagoFecha Float
@@ -239,20 +237,20 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
      Deallocate Prepagos
  End
 
- Insert into fe_detalle(IdFacturacion,detalleItem,DetalleCodigo,DetalleDescripcion,DetalleMultiDescripcion,
-     Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
+ Insert into fe_detalle(IdFacturacion,detalleItem,DetalleCodigo,DetalleDescripcion,
+     DetalleMultiDescripcion,Detalleunidad,Detallecantidad,DetalleValorVUnitarioConIgv,DetalleValorVUnitario,
 	 DescuentoPorcentaje,DescuentoMonto,
 	 IgvPorcentaje,IgvMonto,DetalleTotal,
      IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
      DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV,DetalleUnidadMedidaEmisor) 
  Select @IdFE,NUM_SEC as item,CDG_PROD,
-        Case When CDG_TDOC in ('004','005') Then Isnull(OBS_DOC,'') else Left(DES_PROD,100) end,'',
-        'NIU',CAN_DFAC,Round(PRE_DFAC*(1+@TasaIgv/100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
+        Case When CDG_TDOC in ('004','005') or @Anticipo='B' Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Left(DES_PROD,100) end,
+        '','NIU',CAN_DFAC,Round(PRE_DFAC*(1+@TasaIgv/100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_DFAC,0),2) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_FIC,0),2)  end,
 		@TasaIgv,
-		Case When @Gratuita='S' Then 0 else Round(PRE_TOT*(@TasaIgv/100),2) end,
-		Case When @Gratuita='S' Then 0 else Round(PRE_TOT,2) end,
+		Case When @Gratuita='S' Then 0 else Round(case when Isnull(PRE_TOT,0)=0 then Imp_DFac else PRE_TOT end*(@TasaIgv/100),2) end,    -- En comprobantes convencionales el campo Pre_Tot tiene valor
+		Case When @Gratuita='S' Then 0 else Round(Case When Isnull(PRE_TOT,0)=0 then Imp_DFac else PRE_TOT end,2) end as DetalleTotal,   -- en caso sea 0 se pone el valor Imp_DFac
         0,0,0,0,
         Case When @Gratuita='S' Then '2'  else '1'  end,
 		Case When @Gratuita='S' Then '02' else '01' end,
