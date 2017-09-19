@@ -24,7 +24,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 		@Anticipo Varchar(1),@Observacion Varchar(255),@Vendedor Varchar(3),@VendedorNombre Varchar(60),
 		@Exportacion Varchar(1),@Gratuita Varchar(1),@FormaPagoCodigo Varchar(3),@FormaPago varchar(100),
 		@Ubigeo Varchar(6),@Departamento Varchar(240),@Provincia Varchar(240),@Distrito Varchar(240),@Pais Varchar(2),@IdExtPais Varchar(1),
-		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255),@sql varchar(255)
+		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255),@sql varchar(255),@Detraccion float
 
  Select @Ruc=RUC_CLI,
         @FechaEmision=cast(cast(Case When @TipoDoc in ('004','005') Then FEC_REF else fec_docu end as datetime) as float),
@@ -77,11 +77,11 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
 
  -- Búsqueda de Detraccion
- set @sql='SELECT * FROM M_DOCCLI WHERE RUC_CLI='''+rtrim(@Ruc)+''' AND CDG_TDOC='''+@TipoDoc+''' AND NUM_DOCU='''+@Serie+@Numero+''''
- print N'texto: '+@sql
--- Select @FormaPago=DES_ITEM
-  -- From OpenQuery(EXITUNO32,'SELECT * FROM M_DOCCLI') 
-  --Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
+ set @sql='SELECT * FROM M_SPOTCLI WHERE RUC_CLI='''+rtrim(@Ruc)+''' AND CDG_TDOC='''+@TipoDoc+''' AND NUM_DOCU='''+@Serie+@Numero+''''
+ --print N'texto: '+@sql
+ Select @Detraccion=TAS_RET
+   From OpenQuery(EXITUNO32,'SELECT * FROM M_SPOTCLI') 
+  Where RUC_CLI=@Ruc and CDG_TDOC=@TipoDoc and NUM_DOCU=@Serie+@Numero
   
  Insert into fe_cabecera(IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
   EmpresaTelefono,EmpresaCorreo,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,
@@ -142,10 +142,17 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
 	  Case When CDG_TMOV='998' then 'CERO CON 00/100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito
       -- Cuenta de Detracción
-
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then 10.00 else 0 end as DetraccionPorcentaje,   -- tasa de detracción
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*0.10,0) else 0 end as DetraccionMonto,
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then '00003108198' else '' end as NroCuenta,
+	  case CDG_TDOC when '005' then 0 else @Detraccion end as DetraccionPorcentaje,
+	  case CDG_TDOC when '005' then 0 else @Detraccion end as DetraccionMonto,
+	  case CDG_TDOC when '005' then '' else '00000372978' end as NroCuenta,  --  No poner guines a la cuenta de detracción
+	--  Set 
+ --         DetraccionPorcentaje=Case When ComprobanteTipo='07' then 0 else 10.00 end,
+	--  DetraccionMonto = Case When ComprobanteTipo='07' then 0 else Round(Round(Case When ComprobanteMontoGratuito>0 Then 0 else ComprobanteImporteTotal end,2)*0.10,0) end,
+	--  NroCuenta='00-000-372978'
+	--Where idFE=@Id_Comprobante 
+      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then 10.00 else 0 end as DetraccionPorcentaje,   -- tasa de detracción
+      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*0.10,0) else 0 end as DetraccionMonto,
+      --Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then '00003108198' else '' end as NroCuenta,
 	  --
 	  case When @TipoDoc IN ('004','005') then Case When TDOC_REF='002' Then '01' Else Case When TDOC_REF='001' Then '03' Else '08' end end Else '' End,
 	  case When @TipoDoc IN ('004','005') then Left(DOC_REF,1)+'0'+Right(left(DOC_REF,3),2)  Else '' End,
