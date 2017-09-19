@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 18/09/2017 12:17:15 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 19/09/2017 9:53:42 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,7 +24,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 		@Anticipo Varchar(1),@Observacion Varchar(255),@Vendedor Varchar(3),@VendedorNombre Varchar(60),
 		@Exportacion Varchar(1),@Gratuita Varchar(1),@FormaPagoCodigo Varchar(3),@FormaPago varchar(100),
 		@Ubigeo Varchar(6),@Departamento Varchar(240),@Provincia Varchar(240),@Distrito Varchar(240),@Pais Varchar(2),@IdExtPais Varchar(1),
-		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255)
+		@CorreoTercero Varchar(255),@CorreoTercero1 Varchar(255),@CorreoTercero2 Varchar(255),@sql varchar(255)
 
  Select @Ruc=RUC_CLI,
         @FechaEmision=cast(cast(Case When @TipoDoc in ('004','005') Then FEC_REF else fec_docu end as datetime) as float),
@@ -75,6 +75,13 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
  Select @FormaPago=DES_ITEM
    From OpenQuery(EXITUNO32,'select * from D_TABLAS') 
   Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
+
+ -- Búsqueda de Detraccion
+ set @sql='SELECT * FROM M_DOCCLI WHERE RUC_CLI='''+rtrim(@Ruc)+''' AND CDG_TDOC='''+@TipoDoc+''' AND NUM_DOCU='''+@Serie+@Numero+''''
+ print N'texto: '+@sql
+-- Select @FormaPago=DES_ITEM
+  -- From OpenQuery(EXITUNO32,'SELECT * FROM M_DOCCLI') 
+  --Where CDG_TAB='CPG' and NUM_ITEM=@FormaPagoCodigo
   
  Insert into fe_cabecera(IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
   EmpresaTelefono,EmpresaCorreo,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,
@@ -135,9 +142,10 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
 	  Case When CDG_TMOV='998' then 'CERO CON 00/100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito
       -- Cuenta de Detracción
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then 10.00 else 0 end,   -- tasa de detracción
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*0.10,0) else 0 end,
-      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then '00003108198' else '' end,
+
+      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then 10.00 else 0 end as DetraccionPorcentaje,   -- tasa de detracción
+      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*0.10,0) else 0 end as DetraccionMonto,
+      Case When Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 0 end,2)>700 Then '00003108198' else '' end as NroCuenta,
 	  --
 	  case When @TipoDoc IN ('004','005') then Case When TDOC_REF='002' Then '01' Else Case When TDOC_REF='001' Then '03' Else '08' end end Else '' End,
 	  case When @TipoDoc IN ('004','005') then Left(DOC_REF,1)+'0'+Right(left(DOC_REF,3),2)  Else '' End,
