@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 19/09/2017 18:34:43 ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 20/09/2017 12:10:34 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -246,7 +246,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
      IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
      DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV,DetalleUnidadMedidaEmisor) 
  Select @IdFE,NUM_SEC as item,CDG_PROD,
-        Case When CDG_TDOC in ('004','005') or @Anticipo='B' Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Left(DES_PROD,100) end,
+        Case When CDG_TDOC in ('004','005') or @Anticipo in ('A','B') Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Left(DES_PROD,100) end,
         '','NIU',CAN_DFAC,Round(PRE_DFAC*(1+@TasaIgv/100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_DFAC,0),2) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_FIC,0),2)  end,
