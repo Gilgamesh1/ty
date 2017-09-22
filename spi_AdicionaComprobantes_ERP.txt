@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 21/09/2017 09:19:56 a.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 22/09/2017 12:16:40 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -55,7 +55,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   -- Búsqueda del Cliente
  Select @Email=EMA_CLI,@Direccion=DIR_CLI,@Ubigeo=UBIGEO,
 		@CorreoTercero=EMAILOTROSFE_1,@CorreoTercero1=EMAILOTROSFE_2,@CorreoTercero2=EMAILOTROSFE_3,
-        @TipoDocumento=Case CDG_TDOC When '001' Then '1' when '002' then '6' when '004' then '4' when '005' then '7'  when '007' then 'A' else '0' end 
+        @TipoDocumento=Case CDG_TDOC When '001' Then '1' when '002' then '6' when '004' then '4' when '005' then '7' when '006' then 'A' else '0' end 
    From OpenQuery(EXITUNO32,'select * from M_CLIENT')
   Where RUC_CLI=@Ruc
   
@@ -88,11 +88,6 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
  Select @Detraccion=TAS_RET
    From OpenQuery(EXITUNO32,'SELECT * FROM M_SPOTCLI') 
   Where RUC_CLI=@Ruc and CDG_TDOC=@TipoDoc and NUM_DOCU=@Serie+@Numero
-PRINT N'@Detraccion: '+cast(@Detraccion as varchar)
-PRINT N'@Ruc: '+@Ruc
-PRINT N'@@TipoDoc: '+@TipoDoc
-PRINT N'@@Serie: '+@Serie
-PRINT N'@@Numero: '+@Numero
   
  Insert into fe_cabecera(IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
   EmpresaTelefono,EmpresaCorreo,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,
@@ -159,7 +154,8 @@ PRINT N'@@Numero: '+@Numero
       -- Cuenta de Detracción
 	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then 0 else @Detraccion end as DetraccionPorcentaje,
 	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then 0 else Round( Round(Case When CDG_TMOV='998' Then 0 else VAL_FTOT end,2)*(@Detraccion/100),0) end as DetraccionMonto,
-	  case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then '' else '00000372978' end as NroCuenta,
+	  --case when CDG_TDOC='005' or Round(VAL_FTOT*case When CDG_MON='002' Then @TCambio else 1 end,2)<=700 then '' else '00000372978' end as NroCuenta,
+	  case when isnull(@Detraccion,0)=0 then '' else '00000372978' end as NroCuenta,
 	  --
 	  case When @TipoDoc IN ('004','005') then Case When TDOC_REF='002' Then '01' Else Case When TDOC_REF='001' Then '03' Else '08' end end Else '' End,
 	  case When @TipoDoc IN ('004','005') then Left(DOC_REF,1)+'0'+Right(left(DOC_REF,3),2)  Else '' End,
@@ -169,7 +165,8 @@ PRINT N'@@Numero: '+@Numero
 	  case When @TipoDoc IN ('004','005') then FEC_REF end as ComprobanteRefFechaDoc,
 	  FEC_DOCU,FEC_VCTO,@FormaPago as Instruccion,substring (@FormaPagoCodigo,1,2) as FormaPagoCodigo,
       @OC as OC,Left(NUM_GUIA,3) as Serieguia,RIGHT(NUM_GUIA,7) as NumeroGuia,
-      Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else '01' end end As TipoOperacion,
+      --Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else case when @TipoDocumento='0' and @Pais!='PE' then '03' else '01' end end end As ComprobanteTipoOperacion,
+	  Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else '01' end end As ComprobanteTipoOperacion,
 	  0,
 	  0,0,0,
 	  0,0,0,0,
@@ -300,12 +297,10 @@ END
 Declare @ProdVarios int;
 set @ProdVarios=0
 select @ProdVarios=count(*) from FE_Detalle where IdFacturacion=@IdFE and DetalleDescripcion='VARIOS' and DetalleCodigo='9999999999'
-PRINT N'@ProdVarios: '+cast(@ProdVarios as varchar)
-PRINT N'@TipoDoc: '+@TipoDoc
-if @ProdVarios>0 and  @TipoDoc IN ('004','005')
-begin
+IF @ProdVarios>0 and  @TipoDoc IN ('004','005')
+BEGIN
 	Declare @Descripcion varchar(255)
 	select @Descripcion=ComprobanteMultiGlosa from FE_Cabecera where IdFacturacion=@IdFE
 	update FE_Cabecera set ComprobanteMultiGlosa='' where IdFacturacion=@IdFE
 	update FE_Detalle set DetalleDescripcion=@Descripcion where IdFacturacion=@IdFE
-end
+END
