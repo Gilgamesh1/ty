@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 20/09/2017 12:10:34 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 21/09/2017 09:19:56 a.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -88,6 +88,11 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
  Select @Detraccion=TAS_RET
    From OpenQuery(EXITUNO32,'SELECT * FROM M_SPOTCLI') 
   Where RUC_CLI=@Ruc and CDG_TDOC=@TipoDoc and NUM_DOCU=@Serie+@Numero
+PRINT N'@Detraccion: '+cast(@Detraccion as varchar)
+PRINT N'@Ruc: '+@Ruc
+PRINT N'@@TipoDoc: '+@TipoDoc
+PRINT N'@@Serie: '+@Serie
+PRINT N'@@Numero: '+@Numero
   
  Insert into fe_cabecera(IdFacturacion,EmpresaTipoDocumento,EmpresaRUC,EmpresaRazonSocial,EmpresaCalle,EmpresaCodDistrito,EmpresaDistrito,EmpresaProvincia,EmpresaDepartamento,
   EmpresaTelefono,EmpresaCorreo,EmpresaWeb,ComprobanteTipo,ComprobanteSerie,ComprobanteNumero,ComprobanteMoneda,
@@ -96,7 +101,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   CorreoTerceroToReceive ,CorreoTerceroTemplate ,CorreoTerceroSubject,CorreoTerceroEnvio,
   CorreoTerceroToReceive1,CorreoTerceroTemplate1,CorreoTerceroSubject1,CorreoTerceroEnvio1,
   CorreoTerceroToReceive2,CorreoTerceroTemplate2,CorreoTerceroSubject2,CorreoTerceroEnvio2,
-  TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,
+  TipoCambioMonedaOrigen,TipoCambioMonedaDestino,TipoCambioValor,ComprobanteMultiGlosa,
   ComprobanteMontoGravado,ComprobanteMontoInafecto,ComprobanteMontoExonerado,ComprobanteMontoGratuito,
   ImpuestoTasaigv,ImpuestoIgv,ComprobanteImporteTotal,ComprobanteDescuentoGlobal,
   ComprobanteMontoLetras,
@@ -135,15 +140,19 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  @CorreoTercero1,'EST','CPE',Case When Isnull(@CorreoTercero1,'')='' Then 0 else 1 end,
 	  @CorreoTercero2,'EST','CPE',Case When Isnull(@CorreoTercero2,'')='' Then 0 else 1 end,
 	  --
-	  'PEN','USD',@TCambio as  TipoCambio,
+	  Case When CDG_MON='001' Then 'PEN' else 'USD' end as TipoCambioMonedaOrigen,
+	  Case When CDG_MON='001' Then 'USD' else 'PEN' end as TipoCambioMonedaDestino,
+	  @TCambio as  TipoCambio,
+	  OBS_FCLI as ComprobanteMultiGlosa,
       Case When CDG_TMOV='998' Then 0 else Case When EXO_IGV=0 Then Round(VAL_FSUB,2) else 0 end end as ValorGravado,
       Case When CDG_TMOV='998' Then 0 else Case When EXO_IGV=1 Then Round(VAL_FSUB,2) else 0 end end as ValorNoGravado,0,
 	  Case When CDG_TMOV='998' Then Round(VAL_FSUB,2) else 0 end, -- Importe transferencia gratuita
-      POR_TIGV,Case When CDG_TMOV='998' Then 0 else Round(VAL_FIGV,2) end,   -- IGV 
+      case when @Exportacion='E' then 0 else POR_TIGV end as ImpuestoTasaigv,
+	  Case When CDG_TMOV='998' Then 0 else Round(VAL_FIGV,2) end,   -- IGV 
       Case When CDG_TMOV='998' Then 0 else Round(VAL_FTOT,2) end,
       VAL_FDES as ImporteTotalDscto, --revisar
 	  Case When CDG_TMOV='998' Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
-	       else dbo.numero_a_letras(Round(VAL_FTOT,2),Case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' End) end,
+	       else dbo.numero_a_letras(Round(VAL_FTOT,2),Case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' End) end as ComprobanteMontoLetras,
 	  -- Linea adicionada en referencia para transferencia gratuita
 	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
 	  Case When CDG_TMOV='998' then 'CERO CON 00/100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito
@@ -168,7 +177,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  0,0,0,0,0,0,
 	  0,0,0,0,0,0,
       -1,
-      @Vendedor,'' as VendedorCorreo,@VendedorNombre,'(01)261-1930 ' as VendedorTelefono,'CUENTA DE BANCOS',
+      @Vendedor,'' as VendedorCorreo,@VendedorNombre,'(01)261-1930 ' as VendedorTelefono,case when CDG_TDOC='005' then '' else 'Cuenta de Bancos:' end,
       'BANCO DE CREDITO DEL PERU','Soles'  ,'193-1415354004','002-193-001415354004-13',case when @TipoDoc='005' then 0 else 1 end,
 	  'BANCO DE CREDITO DEL PERU','Dólares','193-1126022169','002-193-001126022169-19',case when @TipoDoc='005' then 0 else 1 end,
       'BANCO CONTINENTAL'        ,'Soles'  ,'164-0100023345','011-164-000100023345-10',case when @TipoDoc='005' then 0 else 1 end,
@@ -287,3 +296,16 @@ BEGIN
     Deallocate Gratuitas
 	update FE_Cabecera set ComprobanteMontoGratuito=round(@SubParcial,2) where IdFacturacion=@IdFE
 END
+
+Declare @ProdVarios int;
+set @ProdVarios=0
+select @ProdVarios=count(*) from FE_Detalle where IdFacturacion=@IdFE and DetalleDescripcion='VARIOS' and DetalleCodigo='9999999999'
+PRINT N'@ProdVarios: '+cast(@ProdVarios as varchar)
+PRINT N'@TipoDoc: '+@TipoDoc
+if @ProdVarios>0 and  @TipoDoc IN ('004','005')
+begin
+	Declare @Descripcion varchar(255)
+	select @Descripcion=ComprobanteMultiGlosa from FE_Cabecera where IdFacturacion=@IdFE
+	update FE_Cabecera set ComprobanteMultiGlosa='' where IdFacturacion=@IdFE
+	update FE_Detalle set DetalleDescripcion=@Descripcion where IdFacturacion=@IdFE
+end
