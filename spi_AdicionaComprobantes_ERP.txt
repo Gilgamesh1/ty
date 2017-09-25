@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 25/09/2017 09:37:29 a.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 25/09/2017 05:11:14 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -58,7 +58,19 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
         @TipoDocumento=Case CDG_TDOC When '001' Then '1' when '002' then '6' when '004' then '4' when '005' then '7' when '006' then 'A' else '0' end 
    From OpenQuery(EXITUNO32,'select * from M_CLIENT')
   Where RUC_CLI=@Ruc
-  
+
+ -- Búsqueda de direccion de facturas
+ Declare @codDir varchar(6)
+ Select @codDir=CDG_CLI
+   From OpenQuery(EXITUNO32,'SELECT * FROM M_DIRFAC')
+  Where CDG_TDOC=@TipoDoc and NUM_DOCU=@Serie+@Numero and RUC_CLI=@Ruc
+ IF isnull(@codDir,'')!=''
+ BEGIN
+	Select @Direccion=DIR_CLI,@Ubigeo=UBIGEO
+	From OpenQuery(EXITUNO32,'SELECT * FROM D_CLIENT')
+	Where CDG_DIR=@codDir and RUC_CLI=@Ruc
+ END
+
  -- Búsqueda Ubigeo
  Select @Departamento=DEPARTAMENTO,@Provincia=PROVINCIA,@Distrito=DISTRITO,@Pais=PAIS,@IdExtPais=SUBSTRING(@ubigeo,0,1)
    From OpenQuery(EXITUNO32,'select * from M_UBIGEO')
