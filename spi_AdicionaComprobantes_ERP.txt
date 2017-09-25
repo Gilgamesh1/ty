@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 22/09/2017 12:16:40 p.m. ******/
+/****** Object:  StoredProcedure [dbo].[spi_AdicionaComprobantes]    Script Date: 25/09/2017 09:37:29 a.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -304,3 +304,11 @@ BEGIN
 	update FE_Cabecera set ComprobanteMultiGlosa='' where IdFacturacion=@IdFE
 	update FE_Detalle set DetalleDescripcion=@Descripcion where IdFacturacion=@IdFE
 END
+
+-- PROCESO DE TIPO DE CAMBIO
+DECLARE @Existe Int
+Select @Existe=Count(*) From FE_TipoCambio Where Empresa=@Empresa and FechaTipoCambio=@FechaEmision
+Set @Existe=Isnull(@Existe,0)
+If @Existe=0 
+   Insert Into FE_TipoCambio(empresa,CodigoMoneda,FechaTipoCambio,TipoCambio,enviado,confirmado)
+   Values(@Empresa,'USD',@FechaEmision,Round(@TCambio,3),0,0)
