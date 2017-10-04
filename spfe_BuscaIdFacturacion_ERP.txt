@@ -1,0 +1,24 @@
+USE [bdig]
+GO
+/****** Object:  StoredProcedure [dbo].[spfe_BuscaIdFacturacion]    Script Date: 04/10/2017 04:32:06 p.m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+--Declare @IdCab Int
+--exec spfe_BuscaComprobanteACESSS '20153270814', '01','F001', '1001'
+ALTER PROCEDURE [dbo].[spfe_BuscaIdFacturacion]
+	@Empresa VarChar(11),
+	@TipoDoc Varchar(3),
+    @Serie   Varchar(4),
+    @Numero  Varchar(10)
+	
+AS
+
+   Select EmpresaRuc,IdFacturacion,Enviado
+     From FE_Cabecera 
+    Where EmpresaRUC=@Empresa 
+      And ComprobanteTipo=@TipoDoc 
+      And ComprobanteSerie=@Serie 
+      And ComprobanteNumero=@Numero

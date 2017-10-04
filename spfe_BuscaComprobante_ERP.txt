@@ -1,0 +1,24 @@
+USE [bdig]
+GO
+/****** Object:  StoredProcedure [dbo].[spfe_BuscaComprobante]    Script Date: 04/10/2017 04:31:57 p.m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+--Declare @IdCab Int
+--exec spfe_BuscaComprobante '01', 'NDB','F01', '00001121'
+ALTER PROCEDURE [dbo].[spfe_BuscaComprobante]
+	@Empresa VarChar(2),
+	@TipoDoc Varchar(3),
+    @Serie   Varchar(3),
+    @Numero  Varchar(10)
+	
+AS
+
+ Select CDG_TDOC As TipoDoc,Left(NUM_DOCU,3) As SerDoc,Right(NUM_DOCU,7) as NumDoc,
+        Isnull(TDOC_REF,'') As TipoDocAfecto,Cast(FEC_DOCU as datetime) as FecDoc
+   From OpenQuery(EXITUNO32,'select * from M_DOCCLI')
+  Where CDG_TDOC=@TipoDoc
+    And NUM_DOCU=@Serie+@Numero
+  -- cast(fec_docu as datetime) between 42899 and 42900 
