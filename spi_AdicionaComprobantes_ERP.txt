@@ -119,7 +119,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   --
   ComprobanteRefTipo,ComprobanteRefSerie,ComprobanteRefNumero,ComprobanteRefCodigoMotivo,ComprobanteRefSusento,ComprobanteRefFechaDoc,
   ComprobanteFechaEmision,FormaPagofechaVencimiento,FormaPagoNotaInstruccion,FormaPagoCodigo,
-  ComprobanteNroOrdenCompra,GuiaRemisionSerie,GuiaRemisionNumero,
+  ComprobanteNroOrdenCompra,--GuiaRemisionSerie,GuiaRemisionNumero,
   ComprobanteTipoOperacion,
   -- Importes con 0
   ComprobanteTotalCargo,
@@ -133,14 +133,14 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
   ComprobanteGrillaDescripcion,ComprobanteGrillaValor1,ComprobanteGrillaValor2,ComprobanteGrillaValor3,ComprobanteGrillaFlag,
   ComprobanteGrillaDescripcion1,ComprobanteGrillaValor11,ComprobanteGrillaValor21,ComprobanteGrillaValor31,ComprobanteGrillaFlag1,
   ComprobanteGrillaDescripcion2,ComprobanteGrillaValor12,ComprobanteGrillaValor22,ComprobanteGrillaValor32,ComprobanteGrillaFlag2,
-  ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3)
+  ComprobanteGrillaDescripcion3,ComprobanteGrillaValor13,ComprobanteGrillaValor23,ComprobanteGrillaValor33,ComprobanteGrillaFlag3,Enviado)
   Select @IdFE,'6','20153270814','EXITUNO SA','AV. MANUEL CIPRIANO DULANTO NRO. 211','150121' As Ubigeo,'PUEBLO LIBRE','LIMA','LIMA',
-	  '(511)2611843' AS Telefono,'ventas@exituno.com.pe','http://www.exituno.com.pe',
+	  '(511)2611930' AS Telefono,'ventas@exituno.com.pe','http://www.exituno.com.pe',
       Case When CDG_TDOC='002' Then '01' Else Case When CDG_TDOC='001' Then '03' Else 
            Case When CDG_TDOC='005' Then '07' Else '08' End End End,
-      Left(NUM_DOCU,1)+'0'+Right(Left(NUM_DOCU,3),2),Right(NUM_DOCU,7),Case When CDG_MON='002' Then 'USD' else 'PEN' End,
+      Left(NUM_DOCU,1)+'0'+Right(Left(NUM_DOCU,3),2),'0'+Right(NUM_DOCU,7),Case When CDG_MON='002' Then 'USD' else 'PEN' End,
       Case When @Exportacion='E' Then '0' else @TipoDocumento end as TipoDocumento,
-	  RUC_CLI as ReceptorRuc,RUC_CLI as CodigoCliente,@Email,@Email as emailcliente,DES_CLI,
+	  rtrim(RUC_CLI) as ReceptorRuc,RUC_CLI as CodigoCliente,@Email,@Email as emailcliente,DES_CLI,
       @Ubigeo as ReceptorUbigeo,@Direccion as DirCP,'' As Ubicacion,case when @IdExtPais!='9' then @Distrito else '' end as Distrito, case when @IdExtPais!='9' then @Provincia else '' end  as Provincia,@Departamento as Departamento,@Pais as Pais,
 	  -- Correo de otros contactos
 	  @CorreoTercero ,'EST','CPE',Case When Isnull(@CorreoTercero ,'')='' Then 0 else 1 end,
@@ -176,7 +176,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	  case When @TipoDoc IN ('004','005') then OBS_FCLI else '' end as ComprobanteRefSusento,
 	  case When @TipoDoc IN ('004','005') then FEC_REF end as ComprobanteRefFechaDoc,
 	  FEC_DOCU,FEC_VCTO,@FormaPago as Instruccion,substring (@FormaPagoCodigo,1,2) as FormaPagoCodigo,
-      @OC as OC,Left(NUM_GUIA,3) as Serieguia,RIGHT(NUM_GUIA,7) as NumeroGuia,
+      @OC as OC,--Left(NUM_GUIA,3) as Serieguia,RIGHT(NUM_GUIA,7) as NumeroGuia,
       --Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else case when @TipoDocumento='0' and @Pais!='PE' then '03' else '01' end end end As ComprobanteTipoOperacion,
 	  Case When @Anticipo in ('A','B','C') Then '04' else Case When @Exportacion='E' Then '02' else '01' end end As ComprobanteTipoOperacion,
 	  0,
@@ -190,14 +190,17 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
       'BANCO DE CREDITO DEL PERU','Soles'  ,'193-1415354004','002-193-001415354004-13',case when @TipoDoc='005' then 0 else 1 end,
 	  'BANCO DE CREDITO DEL PERU','Dólares','193-1126022169','002-193-001126022169-19',case when @TipoDoc='005' then 0 else 1 end,
       'BANCO CONTINENTAL'        ,'Soles'  ,'164-0100023345','011-164-000100023345-10',case when @TipoDoc='005' then 0 else 1 end,
-      'BANCO CONTINENTAL'        ,'Dólares','164-0100023353','011-164-000100023353-14',case when @TipoDoc='005' then 0 else 1 end
+      'BANCO CONTINENTAL'        ,'Dólares','164-0100023353','011-164-000100023353-14',case when @TipoDoc='005' then 0 else 1 end,0
    From OpenQuery(EXITUNO32,'select * from M_DOCCLI')
   Where CDG_TDOC=@TipoDoc
     And NUM_DOCU=@Serie+@Numero
-  SELECT @IdFE=@@IDENTITY
+  --SELECT @IdFE=@@IDENTITY
+  select @IdFE=max(IdFacturacion)+1 from FE_Cabecera --order by IdFacturacion desc
 
  --Asignar Valor Idfacturacion
- Update FE_Cabecera Set IdFacturacion=@IdFE where idFE=@IdFE
+ --Update FE_Cabecera Set IdFacturacion=@IdFE where idFE=@IdFE
+ Update FE_Cabecera Set IdFacturacion=@IdFE where ComprobanteTipo=Case When @TipoDoc='002' Then '01' Else Case When @TipoDoc='001' Then '03' Else 
+           Case When @TipoDoc='005' Then '07' Else '08' End End end and ComprobanteSerie=Left(@Serie,1)+'0'+Right(@Serie,2) and ComprobanteNumero='0'+@Numero
 
  If @Anticipo='C'
  Begin
@@ -263,9 +266,10 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
 	 IgvPorcentaje,IgvMonto,DetalleTotal,
      IscMonto,IscPorcentaje,CargoMonto,CargoPorcentaje,
      DetalleDeterminante,DetalleCodigoTipoPrecio,AfectacionIGV,DetalleUnidadMedidaEmisor) 
- Select @IdFE,NUM_SEC as item,CDG_PROD,
-        Case When CDG_TDOC in ('004','005') or @Anticipo in ('A','B') Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Left(DES_PROD,100) end,
-        '','NIU',CAN_DFAC,Round(PRE_DFAC*(1+@TasaIgv/100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
+ Select @IdFE,NUM_SEC+1 as item,CDG_PROD,
+        --Case When CDG_TDOC in ('004','005') or @Anticipo in ('A','B') Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Left(DES_PROD,100) end,
+		Case When CDG_TDOC in ('004','005') or @Anticipo in ('A','B') Then Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end  else Case When Cast(Isnull(OBS_DOC,'') as varchar(100))='' Then Left(DES_PROD,100) else Cast(Isnull(OBS_DOC,'') as varchar(100)) end end,
+		'','NIU',CAN_DFAC,Round(PRE_DFAC*(1+@TasaIgv/100),8),Case When @Gratuita='S' Then 0 else Round(PRE_DFAC,8) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_DFAC,0),2) end,
 		Case When @Gratuita='S' Then 0 else Round(Isnull(DCT_FIC,0),2)  end,
 		@TasaIgv,
