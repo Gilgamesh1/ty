@@ -159,7 +159,7 @@ Declare @FechaEmision Float,@TasaIgv Float,@TCambio Float,@Pedido Varchar(8),@OC
       Case When CDG_TMOV='998' Then 0 else Round(VAL_FTOT,2) end,
       VAL_FDES as ImporteTotalDscto, --revisar
 	  Case When CDG_TMOV='998' Then 'TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE'
-	       else dbo.numero_a_letras(Round(VAL_FTOT,2),Case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' End) end as ComprobanteMontoLetras,
+	       else rtrim(dbo.numero_a_letras(Round(VAL_FTOT,2),Case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' End)) end as ComprobanteMontoLetras,
 	  -- Linea adicionada en referencia para transferencia gratuita
 	  Case When CDG_TMOV='998' then 1 else 0 end, -- ComprobanteCheckGratuito
 	  Case When CDG_TMOV='998' then 'CERO CON 00/100 '+case When CDG_MON='002' Then 'DOLARES AMERICANOS' else 'SOLES' end else NULL end, -- ComprobanteMontoLetrasGratuito

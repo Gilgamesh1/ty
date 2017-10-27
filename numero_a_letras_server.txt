@@ -1,6 +1,6 @@
 USE [bdig]
 GO
-/****** Object:  UserDefinedFunction [dbo].[numero_a_letras]    Script Date: 25/10/2017 11:17:23 a.m. ******/
+/****** Object:  UserDefinedFunction [dbo].[numero_a_letras]    Script Date: 26/10/2017 06:31:45 p.m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -173,8 +173,7 @@ if @decimal > 0
 else
  select @decimales = ' y 00/100 ' + @moneda  -- + ' exactos'
 -- FINAL
-select @letras  = UPPER( ''    +
-    rtrim(substring(@letras,1,255)) +
+select @letras  = UPPER( rtrim(substring(@letras,1,255)) +
     rtrim(@decimales)  +
     '' )
 
